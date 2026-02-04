@@ -42,6 +42,12 @@ class StateSubsystem(Subsystem):
         self._log_state()
 
     def periodic(self):
+        """
+        Update PyKit logs and `self._last_state`.
+
+        If you plan to use `self.state_changed`, call super().periodic() at the
+        end of your function.
+        """
         if self.state_changed:
             self._log_state()
 
