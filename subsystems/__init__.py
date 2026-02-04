@@ -1,7 +1,11 @@
 """
 Provides the StateSubsystem base class for simple discrete state subsystems.
 
-Subclasses should override `SubsystemState` enum with their own states.
+New feature list for 2026:
+- Freeze/Unfreeze -> Lock/Unlock (better readability)
+- PyKit logging
+- Improved state transitioning (`on_state_change` and `self.last_state`)
+- Minor type checking
 """
 from enum import Enum
 
@@ -16,9 +20,8 @@ class StateSubsystem(Subsystem):
     class SubsystemState(Enum):
         """
         Possible state subsystem states.
-        Subclasses should extend this enum.
+        Subclasses need to override this enum.
         """
-        OVERRIDE_THIS_ENUM = None
 
     def __init__(self, name: str, starting_state: SubsystemState):
         """
@@ -32,8 +35,10 @@ class StateSubsystem(Subsystem):
         super().__init__()
         self.setName(name.title())
 
-        if "OVERRIDE_THIS_ENUM" in self.__class__.SubsystemState.__members__:
+        if len(self.__class__.SubsystemState.__members__) == 0:
             # Subclasses must implement their own SubsystemState
+            # This isn't a great way to check this, but if you're implementing this
+            # and not using any SubsystemStates... maybe there's a better solution to your problem.
             raise TypeError("Subsystems must override SubsystemState.")
 
         self._locked = False
@@ -60,7 +65,11 @@ class StateSubsystem(Subsystem):
 
     @property
     def is_locked(self) -> bool:
-        """Returns True if the subsystem is locked."""
+        """
+        Returns True if the subsystem is locked.
+
+        Locked subsystems can't change states.
+        """
         return self._locked
 
     @is_locked.setter
@@ -73,7 +82,7 @@ class StateSubsystem(Subsystem):
         self.is_locked = True
 
     def unlock(self):
-        """Unlocks the subsystem, allowing switching states."""
+        """Unlocks the subsystem, allowing new state changes."""
         self.is_locked = False
 
     @property
@@ -83,7 +92,7 @@ class StateSubsystem(Subsystem):
 
     @property
     def last_state(self) -> SubsystemState:
-        """Returns the last state of the subsystem."""
+        """Returns the last state of the subsystem (from the last periodic call)."""
         return self._last_state
 
     @property
