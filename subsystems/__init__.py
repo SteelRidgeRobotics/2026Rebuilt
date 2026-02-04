@@ -8,6 +8,7 @@ New feature list for 2026:
 - Minor type checking
 """
 from enum import Enum
+from typing import final
 
 from commands2 import Command
 from commands2.subsystem import Subsystem
@@ -21,6 +22,8 @@ class StateSubsystem(Subsystem):
         """
         Possible state subsystem states.
         Subclasses need to override this enum.
+
+        All states should be unique and have different values.
         """
 
     def __init__(self, name: str, starting_state: SubsystemState):
@@ -35,13 +38,10 @@ class StateSubsystem(Subsystem):
         super().__init__()
         self.setName(name.title())
 
-        if len(self.__class__.SubsystemState.__members__) == 0:
-            # Subclasses must implement their own SubsystemState
-            # This isn't a great way to check this, but if you're implementing this
-            # and not using any SubsystemStates... maybe there's a better solution to your problem.
-            raise TypeError("Subsystems must override SubsystemState.")
-
         self._locked = False
+
+        if not isinstance(starting_state, self.SubsystemState):
+            raise TypeError("starting_state must be a SubsystemState")
         self._last_state = self._current_state = starting_state
 
         self._log_state()
@@ -103,6 +103,7 @@ class StateSubsystem(Subsystem):
     def on_state_change(self, old: SubsystemState, new: SubsystemState) -> None:
         """Called when the state changes. Override if needed."""
 
+    @final
     def set_desired_state(self, desired_state: SubsystemState) -> None:
         """Sets the desired state of the subsystem."""
         if not self._locked and desired_state != self._current_state:
@@ -110,6 +111,7 @@ class StateSubsystem(Subsystem):
             self._current_state = desired_state
             self.on_state_change(old_state, desired_state)
 
+    @final
     def set_desired_state_command(self, state: SubsystemState) -> Command:
         """Sets the desired state of the subsystem with an InstantCommand."""
         return self.runOnce(lambda: self.set_desired_state(state))
