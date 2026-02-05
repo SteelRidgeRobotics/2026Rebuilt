@@ -111,7 +111,6 @@ class StateSubsystem(Subsystem):
             self._current_state = desired_state
             self.on_state_change(old_state, desired_state)
 
-    @final
     def set_desired_state_command(self, state: SubsystemState) -> Command:
         """Sets the desired state of the subsystem with an InstantCommand."""
         return self.runOnce(lambda: self.set_desired_state(state))
