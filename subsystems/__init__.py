@@ -8,7 +8,6 @@ New feature list for 2026:
 - Minor type checking
 """
 from enum import Enum
-from typing import final
 
 from commands2 import Command
 from commands2.subsystem import Subsystem
@@ -103,9 +102,13 @@ class StateSubsystem(Subsystem):
     def on_state_change(self, old: SubsystemState, new: SubsystemState) -> None:
         """Called when the state changes. Override if needed."""
 
-    @final
     def set_desired_state(self, desired_state: SubsystemState) -> None:
-        """Sets the desired state of the subsystem."""
+        """
+        Sets the desired state of the subsystem.
+
+        IT IS REQUIRED TO CALL `super().set_desired_state()` TO MODIFY STATES.
+        DO NOT IMPLEMENT YOUR OWN.
+        """
         if not self._locked and desired_state != self._current_state:
             old_state = self._current_state
             self._current_state = desired_state
