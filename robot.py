@@ -2,6 +2,7 @@ import wpilib
 from commands2 import CommandScheduler
 from ntcore import NetworkTableInstance
 from phoenix6 import SignalLogger
+from pykit.inputs.loggablepowerdistribution import LoggedPowerDistribution
 from pykit.loggedrobot import LoggedRobot
 from pykit.logger import Logger
 from pykit.logreplaysource import LogReplaySource
@@ -60,6 +61,7 @@ class Dwayne(LoggedRobot):
                 Logger.addDataReciever(WPILOGWriter(None))
 
         # Start PyKit logger
+        LoggedPowerDistribution.__init__()
         Logger.start()
 
         DriverStation.silenceJoystickConnectionWarning(not DriverStation.isFMSAttached())
@@ -87,14 +89,14 @@ class Dwayne(LoggedRobot):
             selected_auto.schedule()
 
         elasticlib.select_tab("Autonomous")
-            
+
     def autonomousPeriodic(self) -> None:
         pass
-    
+
     def autonomousExit(self) -> None:
         DataLogManager.log("Autonomous period ended")
         elasticlib.select_tab("Teleop")
-            
+
     def teleopInit(self) -> None:
         DataLogManager.log("Teleoperated period started")
         self.container.get_autonomous_command().cancel()
@@ -126,7 +128,7 @@ class Dwayne(LoggedRobot):
 
     def testExit(self):
         pass
-    
+
     def disabledPeriodic(self) -> None:
         pass
 
