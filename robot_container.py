@@ -1,5 +1,5 @@
 import os
-from typing import Callable, Optional
+from typing import Optional
 
 import commands2
 import commands2.button
@@ -11,7 +11,7 @@ from phoenix6 import swerve
 from phoenix6.configs import TalonFXConfiguration
 from phoenix6.configs.config_groups import NeutralModeValue, MotorOutputConfigs, FeedbackConfigs, InvertedValue
 from pykit.networktables.loggeddashboardchooser import LoggedDashboardChooser
-from wpilib import Field2d, SmartDashboard, XboxController, getDeployDirectory
+from wpilib import XboxController, getDeployDirectory
 from wpimath.geometry import Rotation2d
 from wpimath.units import rotationsToRadians
 
@@ -21,18 +21,15 @@ from generated.tuner_constants import TunerConstants
 from robot_config import currentRobot, has_subsystem, Robot  # Robot detection (Larry vs Comp)
 from subsystems.climber import ClimberSubsystem
 from subsystems.climber.io import ClimberIOTalonFX, ClimberIOSim
-from subsystems.intake import IntakeSubsystem, IntakeIO, IntakeIOSim, IntakeIOTalonFX
+from subsystems.intake import IntakeSubsystem
 from subsystems.superstructure import Superstructure
 from subsystems.swerve import SwerveSubsystem
 from subsystems.vision import VisionSubsystem
-from subsystems.feeder import FeederIOSim, FeederIOTalonFX, FeederSubsystem
-from subsystems.launcher import LauncherIOSim, LauncherIOTalonFX, LauncherSubsystem
 from subsystems.hood import HoodSubsystem
 from subsystems.hood.io import HoodIOSim, HoodIOTalonFX
 from subsystems.turret import TurretSubsystem
 from subsystems.turret.io import TurretIOTalonFX, TurretIOSim
-
-from subsystems.vision.io import VisionIOLimelight
+import inspect
 
 
 class RobotContainer:
@@ -47,17 +44,11 @@ class RobotContainer:
         self._driver_controller = commands2.button.CommandXboxController(0)
         self._function_controller = commands2.button.CommandXboxController(1)
 
-        # Field2d for Elastic dashboard (robot position on field image)
-        self._field = Field2d()
-        SmartDashboard.putData("Field", self._field)
-
         # Initialize subsystems as None - will be created conditionally
         self.climber: Optional[ClimberSubsystem] = None
         self.intake: Optional[IntakeSubsystem] = None
         self.drivetrain: Optional[SwerveSubsystem] = None
         self.vision: Optional[VisionSubsystem] = None
-        self.feeder: Optional[FeederSubsystem] = None
-        self.launcher: Optional[LauncherSubsystem] = None
         self.turret: Optional[TurretSubsystem] = None
         match Constants.currentMode:
             case Constants.Mode.REAL:
@@ -70,20 +61,12 @@ class RobotContainer:
 
                 if has_subsystem("vision"):
                     self.vision = VisionSubsystem(
-                        self.drivetrain.add_vision_measurement,
-                        VisionIOLimelight(
-                            Constants.VisionConstants.FRONT,
-                            Constants.VisionConstants.robot_to_front,
-                            self.drivetrain.get_state().pose.rotation
-                        ),
+                        self.drivetrain,
+                        Constants.VisionConstants.FRONT,
                     )
 
                 if has_subsystem("turret"):
-                    turret_io = TurretIOTalonFX()
-                    self.turret = TurretSubsystem(turret_io, lambda: self.drivetrain.get_state().pose)
-                    print("Turret, present")
-                else:
-                    print("Turret subsystem not available on this robot")
+                    self.turret = TurretSubsystem(TurretIOTalonFX(), lambda: self.drivetrain.get_state().pose)
 
                 # Create climber only if it exists on this robot
                 if has_subsystem("climber"):
@@ -99,6 +82,7 @@ class RobotContainer:
                     # Note: Constants.CanIDs.CLIMB_TALON is automatically set based on detected robot (Larry vs Comp)
                     climber_io = ClimberIOTalonFX(
                         Constants.CanIDs.CLIMB_TALON,  # Different CAN ID for Larry vs Comp
+                        Constants.ClimberConstants.SERVO_PORT,
                         climber_motor_config
                     )
 
@@ -108,29 +92,18 @@ class RobotContainer:
                 else:
                     print("Climber subsystem not available on this robot")
 
-                if has_subsystem("feeder"):
-                    feeder_io = FeederIOTalonFX()
-                    self.feeder = FeederSubsystem(feeder_io)
-                    print("Feeder, Present")
-                else:
-                    print("Feeder subsystem not available on this robot")
-
-                if has_subsystem("launcher"):
-                    launcher_io = LauncherIOTalonFX()
-                    self.launcher = LauncherSubsystem(launcher_io, lambda: self.drivetrain.get_state().pose)
-                    print("Launcher, Present")
-                else:
-                    print("Launcher subsystem not available on this robot")
-
-                if has_subsystem("intake"):
-                    intake_io = IntakeIOTalonFX()
-                    self.intake = IntakeSubsystem(intake_io)
-                    print("Intake, Present")
-                else:
-                    print("Intake subsystem not available on this robot")
+                    #create hood subsystem
 
                 if has_subsystem("hood"):
-                    hood_io = HoodIOTalonFX()
+                    hood_config = TalonFXConfiguration()
+                    hood_config.slot0 = Constants.HoodConstants.GAINS
+                    hood_config.feedback.sensor_to_mechanism_ratio = Constants.HoodConstants.GEAR_RATIO
+                    hood_config.motor_output.neutral_mode = NeutralModeValue.BRAKE
+                    hood_config.motor_output.inverted = InvertedValue.CLOCKWISE_POSITIVE
+
+                    hood_io = HoodIOTalonFX(
+                        Constants.CanIDs.HOOD_TALON,
+                    )
 
                     self.hood = HoodSubsystem(hood_io, lambda: self.drivetrain.get_state().pose)
                     print("we hood") # hood is present
@@ -141,60 +114,25 @@ class RobotContainer:
                 # Sim robot, instantiate physics sim IO implementations (if available)
                 self.drivetrain = TunerConstants.create_drivetrain()
                 self.vision = VisionSubsystem(
-                    self.drivetrain.add_vision_measurement,
-                    VisionIOLimelight(
-                        Constants.VisionConstants.FRONT,
-                        Constants.VisionConstants.robot_to_front,
-                        self.drivetrain.get_state().pose.rotation
-                    ),
+                    self.drivetrain,
+                    Constants.VisionConstants.FRONT,
                 )
-
                 #hood
                 robot_pose_supplier = lambda: self.drivetrain.get_state().pose
                 self.hood = HoodSubsystem(HoodIOSim(), robot_pose_supplier)
 
                 self.turret = TurretSubsystem(TurretIOSim(), lambda: self.drivetrain.get_state().pose)
 
-                self.climber = ClimberSubsystem(ClimberIOSim())
-                print("Climber, Present")
-
-                if has_subsystem("feeder"):
-                    self.feeder = FeederSubsystem(FeederIOSim())
-                    print("Feeder, Present")
+                # Create climber only if it exists on this robot
+                if has_subsystem("climber"):
+                    # Create climber subsystem with simulation IO
+                    self.climber = ClimberSubsystem(ClimberIOSim())
+                    print("Climber, Present")
                 else:
-                    print("Feeder subsystem not available on this robot")
-
-                if has_subsystem("launcher"):
-                    self.launcher = LauncherSubsystem(LauncherIOSim(), lambda: self.drivetrain.get_state().pose)
-                    print("Launcher, Present")
-                else:
-                    print("Launcher subsystem not available on this robot")
-
-                if has_subsystem("intake"):
-                    self.intake = IntakeSubsystem(IntakeIOSim())
-                    print("Intake, Present")
-                else:
-                    print("Intake subsystem not available on this robot")
-
-                if has_subsystem("turret"):
-                    turret_io = TurretIOSim()
-                    self.turret = TurretSubsystem(turret_io, lambda: self.drivetrain.get_state().pose)
-                    print("Turret, present")
-                else:
-                    print("Turret subsystem not available on this robot")
-
-                if has_subsystem("hood"):
-                    hood_io = HoodIOSim()
-
-                    self.hood = HoodSubsystem(hood_io, lambda: self.drivetrain.get_state().pose)
-                    print("we hood") # hood is present
-                else:
-                    print("straight out the suburbs") # hood is not present
-
-                
+                    print("Climber subsystem not available on this robot")
 
         self.superstructure = Superstructure(
-            self.drivetrain, self.climber, self.intake
+            self.drivetrain, self.vision, self.climber, self.intake
         )
 
         self._setup_swerve_requests()
@@ -282,9 +220,15 @@ class RobotContainer:
 
         if self.intake is not None:
             self._driver_controller.rightBumper().whileTrue(
-                InstantCommand(lambda: self.intake.set_desired_state(self.intake.SubsystemState.INTAKE))).onFalse(
-                    InstantCommand(lambda: self.intake.set_desired_state(self.intake.SubsystemState.STOP)))
-
+                self.intake.set_desired_state_command(self.intake.SubsystemState.OUTPUT)
+            ).onFalse(
+                self.intake.set_desired_state_command(self.intake.SubsystemState.INTAKE)
+            )
+            self._driver_controller.b().whileTrue(
+                self.intake.set_desired_state_command(self.intake.SubsystemState.STOP)
+            ).onFalse(
+                self.intake.set_desired_state_command(self.intake.SubsystemState.INTAKE)
+            )
         else:
             print("Intake subsystem not available on this robot, unable to bind intake buttons")
 
@@ -299,72 +243,31 @@ class RobotContainer:
             self.drivetrain.runOnce(
                 lambda: self.drivetrain.seed_field_centric()))
 
-        if self.feeder is not None:
-            self._function_controller.leftBumper().whileTrue(InstantCommand(lambda: self.feeder.set_desired_state(self.feeder.SubsystemState.INWARD))).onFalse(InstantCommand(lambda: self.feeder.set_desired_state(self.feeder.SubsystemState.STOP)))
-        else:
-            print("Feeder subsystem not available on this robot, unable to bind feeder buttons")
-        if self.launcher is not None:
-            self._function_controller.rightBumper().whileTrue(InstantCommand(lambda: self.launcher.set_desired_state(self.launcher.SubsystemState.SCORE))).onFalse(InstantCommand(lambda: self.launcher.set_desired_state(self.launcher.SubsystemState.IDLE)))
-        else:
-            print("Launcher subsystem not available on this robot, unable to bind launcher buttons")
+        goal_bindings = {
+            self._function_controller.y(): self.superstructure.Goal.SCORE,
+            self._function_controller.x(): self.superstructure.Goal.PASSDEPOT,
+            self._function_controller.b(): self.superstructure.Goal.PASSOUTPOST,
+            self._function_controller.a(): self.superstructure.Goal.DEFAULT,
+            self._function_controller.povUp(): self.superstructure.Goal.CLIMBREADY,
+            self._function_controller.povDown(): self.superstructure.Goal.CLIMB,
+        }
+
+        Trigger(lambda: self._function_controller.getLeftTriggerAxis() > 0.75).onTrue(
+            self.vision.set_desired_state_command(self.vision.SubsystemState.NO_ESTIMATES)
+        )
+
+        Trigger(lambda: self._function_controller.getRightTriggerAxis() > 0.75).onTrue(
+            self.vision.set_desired_state_command(self.vision.SubsystemState.ALL_ESTIMATES)
+        )
         
-        if self.turret is not None and self.hood is not None:
-            self._function_controller.y().onTrue(
-                InstantCommand(lambda: self.turret.set_desired_state(self.turret.SubsystemState.HUB)).alongWith(
-                    InstantCommand(lambda: self.hood.set_desired_state(self.hood.SubsystemState.AIMBOT))
-                )
-            )
+        # Turret to hub
+        self._function_controller.y().onTrue(self.turret.runOnce(lambda: self.turret.rotate_to_goal(self.turret.Goal.HUB)))
 
-            self._function_controller.x().onTrue(
-                InstantCommand(lambda: self.turret.set_desired_state(self.turret.SubsystemState.DEPOT)).alongWith(
-                    InstantCommand(lambda: self.hood.set_desired_state(self.hood.SubsystemState.PASS))
-                )
-            )
-            
-            self._function_controller.b().onTrue(
-                InstantCommand(lambda: self.turret.set_desired_state(self.turret.SubsystemState.OUTPOST)).alongWith(
-                    InstantCommand(lambda: self.hood.set_desired_state(self.hood.SubsystemState.PASS))
-                )
-            )
+        # Turret to depot
+        self._function_controller.x().onTrue(self.turret.runOnce(lambda: self.turret.rotate_to_goal(self.turret.Goal.DEPOT)))
 
-            Trigger(lambda: self._function_controller.getLeftTriggerAxis() > 0.75).onTrue(
-                InstantCommand(lambda: self.turret.set_desired_state(self.turret.SubsystemState.MANUAL)).alongWith(
-                    InstantCommand(lambda: self.hood.set_desired_state(self.hood.SubsystemState.MANUAL))
-                )
-            )
-           
-
-            Trigger(lambda: self._function_controller.getLeftTriggerAxis() > 0.75).whileTrue(
-                InstantCommand(lambda: self.turret.rotate_manually(self._function_controller.getRightX()))
-            )
-
-            Trigger(lambda: self._function_controller.getLeftTriggerAxis() > 0.75).whileTrue(
-                InstantCommand(lambda: self.hood.rotate_manually(self._function_controller.getRightY()))
-            )
-            self._function_controller.povUp().onTrue(
-                InstantCommand(lambda: self.hood.set_desired_state(self.hood.SubsystemState.AIMBOT))
-            )
-            #self._function_controller.getLeftTriggerAxis().onTrue(
-        else:
-            print("Turret or hood subsystem not available on this robot, unable to bind turret buttons")
-        
-        if self.hood is not None:
-            self._function_controller.povDown().onTrue(
-                InstantCommand(lambda: self.hood.set_desired_state(self.hood.SubsystemState.STOW))
-            )
-        else:
-            print("Hood subsystem not available on this robot, unable to bind hood buttons")
-
-        if self.climber is not None:
-            self._function_controller.povUp().onTrue(
-                self.climber.set_desired_state_command(self.climber.SubsystemState.EXTEND)
-            )
-            self._function_controller.povDown().onTrue(
-                self.climber.set_desired_state_command(self.climber.SubsystemState.STOW)
-            )
-        else:
-            print("Climber subsystem not available on this robot, unable to bind climber buttons")
-
+        # Turret to outpost
+        self._function_controller.b().onTrue(self.turret.runOnce(lambda: self.turret.rotate_to_goal(self.turret.Goal.OUTPOST)))
 
     def get_autonomous_command(self) -> commands2.Command:
         return self._auto_chooser.getSelected()
@@ -377,14 +280,6 @@ class RobotContainer:
         """Get the intake subsystem if it exists on this robot."""
         return self.intake
 
-    def get_turret(self) -> Optional[TurretSubsystem]:
-        """Get the turret subsystem if it exists on this robot."""
-        return self.turret
-
-    def get_hood(self) -> Optional[HoodSubsystem]:
-        """Get the hood subsystem if it exists on this robot."""
-        return self.hood
-
     def has_climber(self) -> bool:
         """Check if climber subsystem exists on this robot."""
         return self.climber is not None
@@ -392,11 +287,3 @@ class RobotContainer:
     def has_intake(self) -> bool:
         """Check if intake subsystem exists on this robot."""
         return self.intake is not None
-
-    def has_turret(self) -> bool:
-        """Check if turret subsystem exists on this robot."""
-        return self.turret is not None
-
-    def has_hood(self) -> bool:
-        """Check if hood subsystem exists on this robot."""
-        return self.hood is not None
