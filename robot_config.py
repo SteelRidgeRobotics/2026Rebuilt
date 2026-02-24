@@ -83,7 +83,7 @@ def detect_robot() -> Robot:
     
     # Fallback: Default to COMP for competition, or set to LARRY for testing
     # Change this default based on your preference
-    return Robot.LARRY  # or Robot.LARRY if you want to default to test robot
+    return Robot.COMP  # or Robot.LARRY if you want to default to test robot
 
 
 # Detect robot at module load time
@@ -102,6 +102,8 @@ def has_subsystem(subsystem_name: str) -> bool:
     LARRY_SUBSYSTEMS = {
         "drivetrain",  # Always present
         "vision",      # Always present
+        #"hood",
+        #"turret",
         # Add subsystems that Larry has:
         # "climber",
         # "intake",
@@ -110,8 +112,12 @@ def has_subsystem(subsystem_name: str) -> bool:
     COMP_SUBSYSTEMS = {
         "drivetrain",  # Always present
         "vision",      # Always present
+        "intake",      # Competition robot has intake
+        "feeder",      # Competition robot has feeder
+        "launcher",    # Competition robot has launcher
+        "hood",        # Competition robot has hood
+        "turret",      # Competition robot has turret
         #"climber",     # Competition robot has climber
-        #"intake",      # Competition robot has intake
         # Add other Comp subsystems as needed
     }
     

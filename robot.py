@@ -10,10 +10,27 @@ from pykit.wpilog.wpilogwriter import WPILOGWriter
 from wpilib import DataLogManager, DriverStation, Timer
 
 import robot_config
+
+# Workaround for PyKit: ntcore IntegerPublisher and wpiutil DataLog expect int64,
+# but LogTable.getTimestamp() can exceed int64 max. Patch at source to fix all
+# receivers (NT4Publisher, WPILOGWriter, etc.).
+_INT64_MAX = 2**63 - 1
+from pykit.logtable import LogTable
+_original_get_timestamp = LogTable.getTimestamp
+def _patched_get_timestamp(self):
+    ts = _original_get_timestamp(self)
+    if ts > _INT64_MAX:
+        ts = ts // 1000  # Assume nanoseconds -> microseconds
+    if ts > _INT64_MAX:
+        ts = _INT64_MAX
+    return ts
+LogTable.getTimestamp = _patched_get_timestamp
 from constants import Constants
 from lib import elasticlib
 from lib.elasticlib import Notification, NotificationLevel
 from robot_container import RobotContainer
+import util
+
 
 class Dwayne(LoggedRobot):
 
@@ -59,6 +76,9 @@ class Dwayne(LoggedRobot):
                 Logger.setReplaySource(LogReplaySource())
                 Logger.addDataReciever(WPILOGWriter(None))
 
+        # Avoid CAN errors from pykit when no PDH/PDP is on the bus (or wrong module ID)
+        util._install_safe_power_distribution_logging()
+
         # Start PyKit logger
         Logger.start()
 
@@ -76,6 +96,8 @@ class Dwayne(LoggedRobot):
     def robotPeriodic(self) -> None:
         CommandScheduler.getInstance().run()
         self._match_time_pub.set(Timer.getMatchTime())
+        if self.container.drivetrain is not None:
+            self.container._field.setRobotPose(self.container.drivetrain.get_state().pose)
 
     def _simulationPeriodic(self) -> None:
         pass

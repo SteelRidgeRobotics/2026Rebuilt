@@ -4,13 +4,22 @@ from typing import Final
 
 from phoenix6 import BaseStatusSignal
 from phoenix6.configs import TalonFXConfiguration
-from phoenix6.controls import VelocityVoltage
+from phoenix6.controls import VelocityVoltage, Follower, VoltageOut
 from phoenix6.hardware import TalonFX
-from phoenix6.signals import NeutralModeValue
+from phoenix6.signals import NeutralModeValue, MotorAlignmentValue, InvertedValue
+
 from pykit.autolog import autolog
-from wpimath.units import radians, radians_per_second, volts, amperes, celsius, degrees, revolutions_per_minute
+from wpimath.units import radians, radians_per_second, volts, amperes, celsius
+from wpimath.system.plant import DCMotor, LinearSystemId
+from wpimath.controller import PIDController
+from wpilib.simulation import FlywheelSim
+from math import pi
 
 from constants import Constants
+LauncherConstants = Constants.LauncherConstants
+GeneralConstants = Constants.GeneralConstants
+CanIds = Constants.CanIDs
+
 from util import tryUntilOk
 
 
@@ -47,24 +56,29 @@ class LauncherIOTalonFX(LauncherIO):
     Real hardware implementation using TalonFX motor controller.
     """
 
-    def __init__(self, motor_id: int, motor_config: TalonFXConfiguration) -> None:
+    def __init__(self) -> None:
         """
         Initialize the real hardware IO.
-
-        :param motor_id: CAN ID of the TalonFX motor
-        :param motor_config: TalonFX configuration to apply
         """
-        self._motor: Final[TalonFX] = TalonFX(motor_id, "*")
+        self._main_motor: Final[TalonFX] = TalonFX(CanIds.LAUNCHER_TOP_TALON, "rio")
+        self._follower_motor: Final[TalonFX] = TalonFX(CanIds.LAUNCHER_LOW_TALON, "rio")
+
         # Apply motor configuration
-        tryUntilOk(5, lambda: self._motor.configurator.apply(motor_config, 0.25))
-        tryUntilOk(5, lambda: self._motor.set_position(0, 0.25))
+        _motor_config = TalonFXConfiguration()
+
+        _motor_config.slot0 = LauncherConstants.GAINS
+        _motor_config.motor_output.neutral_mode = NeutralModeValue.COAST
+        _motor_config.feedback.sensor_to_mechanism_ratio = LauncherConstants.GEAR_RATIO
+        _motor_config.motor_output.inverted = InvertedValue.CLOCKWISE_POSITIVE
+
+        tryUntilOk(5, lambda: self._main_motor.configurator.apply(_motor_config, 0.25))
 
         # Create status signals for motor
-        self._position: Final = self._motor.get_position()
-        self._velocity: Final = self._motor.get_velocity()
-        self._appliedVolts: Final = self._motor.get_motor_voltage()
-        self._current: Final = self._motor.get_stator_current()
-        self._temperature: Final = self._motor.get_device_temp()
+        self._position: Final = self._main_motor.get_position()
+        self._velocity: Final = self._main_motor.get_velocity()
+        self._appliedVolts: Final = self._main_motor.get_motor_voltage()
+        self._current: Final = self._main_motor.get_stator_current()
+        self._temperature: Final = self._main_motor.get_device_temp()
 
         # Configure update frequencies
         BaseStatusSignal.set_update_frequency_for_all(
@@ -75,10 +89,12 @@ class LauncherIOTalonFX(LauncherIO):
             self._current,
             self._temperature
         )
-        self._motor.optimize_bus_utilization()
+        self._main_motor.optimize_bus_utilization()
 
-        # Voltage control request
-        self._voltageRequest: Final[VelocityVoltage] = VelocityVoltage(0)
+        # Control requests
+        self._velocityRequest: Final[VelocityVoltage] = VelocityVoltage(0)
+        self._voltageRequest: Final[VoltageOut] = VoltageOut(0)
+        self._follower_motor.set_control(Follower(CanIds.LAUNCHER_TOP_TALON, MotorAlignmentValue.ALIGNED))
 
     def updateInputs(self, inputs: LauncherIO.LauncherIOInputs) -> None:
         """Update inputs with current motor state."""
@@ -101,9 +117,12 @@ class LauncherIOTalonFX(LauncherIO):
 
     def setMotorRPS(self, rps: float) -> None:
         """Set the motor output velocity."""
-        self._voltageRequest.velocity = rps
-        self._motor.set_control(self._voltageRequest)
-
+        if rps == 0:
+            self._voltageRequest = VoltageOut(0)
+            self._main_motor.set_control(self._voltageRequest)
+        else:
+            self._velocityRequest.velocity = rps
+            self._main_motor.set_control(self._velocityRequest)
 
 
 class LauncherIOSim(LauncherIO):
@@ -113,29 +132,48 @@ class LauncherIOSim(LauncherIO):
 
     def __init__(self) -> None:
         """Initialize the simulation IO."""
+        self._motorType = DCMotor.krakenX44FOC(2) 
+
+        linearSystem = LinearSystemId.flywheelSystem(
+            self._motorType,
+            LauncherConstants.MOMENT_OF_INERTIA,
+            LauncherConstants.GEAR_RATIO
+        )
+        self._simMotor = FlywheelSim(linearSystem, self._motorType, [0])
+        self._closedloop = True
+
         self._motorPosition: float = 0.0
         self._motorVelocity: float = 0.0
         self._motorAppliedVolts: float = 0.0
 
+        self._controller = PIDController(
+                            LauncherConstants.GAINS.k_p / (2*pi),
+                            LauncherConstants.GAINS.k_i / (2*pi),
+                            LauncherConstants.GAINS.k_d / (2*pi),
+                            0.02)
+                        
     def updateInputs(self, inputs: LauncherIO.LauncherIOInputs) -> None:
         """Update inputs with simulated state."""
-        # Simulate motor behavior (simple integration)
-        # In a real simulation, you'd use a physics model here
-        dt = 0.02  # 20ms periodic
-        self._motorPosition += self._motorVelocity * dt
+
+        self._simMotor.update(0.02)
+
+        if self._closedloop:
+            self._motorAppliedVolts = self._controller.calculate(
+                self._simMotor.getAngularVelocity())
+        else:
+            self._controller.reset()
+
+        self._simMotor.setInputVoltage(self._motorAppliedVolts)
 
         # Update inputs
         inputs.motorConnected = True
-        inputs.motorPosition = self._motorPosition
-        inputs.motorVelocity = self._motorVelocity
-        inputs.motorAppliedVolts = self._motorAppliedVolts
-        inputs.motorCurrent = abs(self._motorAppliedVolts / 12.0) * 40.0  # Rough current estimate
-        inputs.motorTemperature = 25.0  # Room temperature
+        inputs.motorVelocity = self._simMotor.getAngularVelocity()
+        inputs.motorAppliedVolts = self._simMotor.getInputVoltage()
+        inputs.motorCurrent = self._simMotor.getCurrentDraw()
+        inputs.motorTemperature = 25.0
+        inputs.motorPosition += inputs.motorVelocity * 0.02
 
 
     def setMotorRPS(self, rps: float) -> None:
         """Set the motor output velocity."""
-        self._motorAppliedVolts = max(-12.0, min(12.0, rps))
-        # Simple velocity model: voltage -> velocity (with some damping)
-        self._motorVelocity = self._motorAppliedVolts * 10.0  # Adjust multiplier as needed
-
+        self._controller.setSetpoint(rps)

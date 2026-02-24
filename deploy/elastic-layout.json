@@ -5,7 +5,623 @@
     {
       "name": "Main",
       "grid_layout": {
-        "layouts": [],
+        "layouts": [
+          {
+            "title": "limelight-front",
+            "x": 512.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "botpose",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/botpose",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "botpose_orb",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/botpose_orb",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "botpose_orb_wpiblue",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/botpose_orb_wpiblue",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "botpose_orb_wpired",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/botpose_orb_wpired",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "botpose_targetspace",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/botpose_targetspace",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "botpose_wpiblue",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/botpose_wpiblue",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "botpose_wpired",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/botpose_wpired",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "camerapose_robotspace",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/camerapose_robotspace",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "camerapose_targetspace",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/camerapose_targetspace",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "cl",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/cl",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "crosshairs",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/crosshairs",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "fiducial_id_filters_set",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/fiducial_id_filters_set",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "getpipe",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/getpipe",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "getpipetype",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/getpipetype",
+                  "period": 0.06,
+                  "data_type": "string",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "hb",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/hb",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "hw",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/hw",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "imu",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/imu",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "json",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/json",
+                  "period": 0.06,
+                  "data_type": "string",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "ledMode",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/ledMode",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "llpython",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/llpython",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "pipeline",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/pipeline",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "rawbarcodes",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/rawbarcodes",
+                  "period": 0.06,
+                  "data_type": "string[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "rawdetections",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/rawdetections",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "rawfiducials",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/rawfiducials",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "rawtargets",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/rawtargets",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "robot_orientation_set",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/robot_orientation_set",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "stddevs",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/stddevs",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "stream",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/stream",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "t2d",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/t2d",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "ta",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/ta",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "targetpose_cameraspace",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/targetpose_cameraspace",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "targetpose_robotspace",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/targetpose_robotspace",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "tc",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/tc",
+                  "period": 0.06,
+                  "data_type": "double[]",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "tcclass",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/tcclass",
+                  "period": 0.06,
+                  "data_type": "string",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "tdclass",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/tdclass",
+                  "period": 0.06,
+                  "data_type": "string",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "throttle_set",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/throttle_set",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "tid",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/tid",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "tl",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/tl",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "tv",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/tv",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "tx",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/tx",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "txnc",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/txnc",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "ty",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/ty",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "tync",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/limelight-front/tync",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          }
+        ],
         "containers": [
           {
             "title": "Selected Auto",
@@ -113,6 +729,26 @@
             }
           },
           {
+            "title": "Field",
+            "x": 0.0,
+            "y": 384.0,
+            "width": 512.0,
+            "height": 384.0,
+            "type": "Field",
+            "properties": {
+              "topic": "/SmartDashboard/Field",
+              "period": 0.06,
+              "field_game": "Reefscape",
+              "robot_width": 0.85,
+              "robot_length": 0.85,
+              "show_other_objects": true,
+              "show_trajectories": true,
+              "field_rotation": 0.0,
+              "robot_color": 4294198070,
+              "trajectory_color": 4294967295
+            }
+          },
+          {
             "title": "Front LL",
             "x": 896.0,
             "y": 0.0,
@@ -124,6 +760,19 @@
               "period": 0.06,
               "rotation_turns": 0
             }
+          },
+          {
+            "title": "limelight-turret",
+            "x": 896.0,
+            "y": 384.0,
+            "width": 384.0,
+            "height": 384.0,
+            "type": "Camera Stream",
+            "properties": {
+              "topic": "/CameraPublisher/limelight-turret",
+              "period": 0.06,
+              "rotation_turns": 0
+            }
           }
         ]
       }
@@ -131,268 +780,130 @@
     {
       "name": "Tuning",
       "grid_layout": {
-        "layouts": [
-          {
-            "title": "Steer Gains",
-            "x": 0.0,
-            "y": 0.0,
-            "width": 256.0,
-            "height": 256.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "LEFT"
-            },
-            "children": [
-              {
-                "title": "TurnkP",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/Module/TurnkP",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "TurnkD",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/Module/TurnkD",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              }
-            ]
-          },
-          {
-            "title": "Drive Gains",
-            "x": 256.0,
-            "y": 0.0,
-            "width": 256.0,
-            "height": 384.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "LEFT"
-            },
-            "children": [
-              {
-                "title": "DrivekP",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/Module/DrivekP",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "DrivekD",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/Module/DrivekD",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "DrivekS",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/Module/DrivekS",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "DrivekV",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/Module/DrivekV",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "DrivekT",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/Module/DrivekT",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              }
-            ]
-          },
-          {
-            "title": "Brake/Coast",
-            "x": 512.0,
-            "y": 0.0,
-            "width": 256.0,
-            "height": 256.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "LEFT"
-            },
-            "children": [
-              {
-                "title": "CoastMetersPerSecThreshold",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/CoastMetersPerSecThreshold",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "CoastWaitTimeSeconds",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/CoastWaitTimeSeconds",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              }
-            ]
-          },
-          {
-            "title": "Force Gyro Inputs (Sim Only)",
-            "x": 512.0,
-            "y": 256.0,
-            "width": 256.0,
-            "height": 128.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "LEFT"
-            },
-            "children": [
-              {
-                "title": "SimulatedGyroPitch",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/SimulatedGyroPitch",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "SimulatedGyroRoll",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/SimulatedGyroRoll",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              }
-            ]
-          },
-          {
-            "title": "Anti Tip",
-            "x": 768.0,
-            "y": 0.0,
-            "width": 256.0,
-            "height": 256.0,
-            "type": "List Layout",
-            "properties": {
-              "label_position": "LEFT"
-            },
-            "children": [
-              {
-                "title": "TipKp",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/AntiTip/TipKp",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              },
-              {
-                "title": "TipThreshold",
-                "x": 0.0,
-                "y": 0.0,
-                "width": 128.0,
-                "height": 128.0,
-                "type": "Text Display",
-                "properties": {
-                  "topic": "/Tuning/Drive/AntiTip/TipThreshold",
-                  "period": 0.06,
-                  "data_type": "double",
-                  "show_submit_button": false
-                }
-              }
-            ]
-          }
-        ],
+        "layouts": [],
         "containers": [
           {
-            "title": "SkewCompensationScalar",
-            "x": 0.0,
-            "y": 256.0,
+            "title": "Turret Zero Position",
+            "x": 256.0,
+            "y": 0.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/Tuning/Drive/SkewCompensationScalar",
+              "topic": "/AdvantageKit/RealOutputs/Turret/turret_zero_position",
               "period": 0.06,
               "data_type": "double",
-              "show_submit_button": true
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "hood_zero_position",
+            "x": 512.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/Hood/hood_zero_position",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "hood_position",
+            "x": 512.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/Hood/hood_position",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "climber_zero_position",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/Climber/climber_zero_position",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "climber_current",
+            "x": 0.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/Climber/climber_current",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Launcher motorVelocity",
+            "x": 768.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/Launcher/motorVelocity",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "turret_position",
+            "x": 256.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/Turret/turret_position",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "limelight-front",
+            "x": 0.0,
+            "y": 256.0,
+            "width": 512.0,
+            "height": 384.0,
+            "type": "Camera Stream",
+            "properties": {
+              "topic": "/CameraPublisher/limelight-front",
+              "period": 0.06,
+              "rotation_turns": 0
+            }
+          },
+          {
+            "title": "limelight-turret",
+            "x": 640.0,
+            "y": 256.0,
+            "width": 512.0,
+            "height": 384.0,
+            "type": "Camera Stream",
+            "properties": {
+              "topic": "/CameraPublisher/limelight-turret",
+              "period": 0.06,
+              "rotation_turns": 0
             }
           }
         ]

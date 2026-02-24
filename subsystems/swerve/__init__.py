@@ -342,7 +342,9 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
 
         # Log state
         state = self.get_state()
-        self._swerve_state.odom_freq = 1.0 / state.odometry_period
+        self._swerve_state.odom_freq = (
+            1.0 / state.odometry_period if state.odometry_period > 0 else 0.0
+        )
         self._swerve_state.speeds = state.speeds
         self._swerve_state.pose2d = state.pose
 

@@ -7,13 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Test Path of Doom"
+            "pathName": "Start Outpost to Shoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Launch"
           }
         }
       ]
     }
   },
-  "resetOdom": false,
+  "resetOdom": true,
   "folder": null,
   "choreoAuto": false
 }
