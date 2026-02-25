@@ -37,8 +37,8 @@ match (DriverStation.isAutonomous(), DriverStation.isTeleop(), time):
 
     # During Teleop, the timer starts at 135.0 and goes until it reaches 0.
     if DriverStation.isTeleop():
-        # Inspect if we are in the final 20 seconds (Endgame)
-        if time <= 20:
+        # Inspect if we are in the final 30 seconds (Endgame)
+        if time <= 30:
             return "ENDGAME", game_data
         else:
             return "TELEOP", game_data
