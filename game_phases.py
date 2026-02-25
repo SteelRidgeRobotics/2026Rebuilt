@@ -46,18 +46,6 @@ match (DriverStation.isAutonomous(), DriverStation.isTeleop(), time):
     # Retreat for Disabled or Test mode
     return "DISABLED", game_data
 
-class MyRobot(wpilib.TimedRobot):
-    def autonomousPeriodic(self):
-        phase, data = get_phase()
-
-        # You can use match-case to manage the phase results too!
-        match phase:
-            case "AUTO":
-                if "L" in data:
-                    self.drive_to_left_goal()
-                else:
-                    self.drive_to_right_goal()
-
     def teleopPeriodic(self):
         phase, data = get_phase()
 
