@@ -14,6 +14,45 @@ from pykit.inputs.loggablepowerdistribution import LoggedPowerDistribution
 
 from constants import Constants
 
+class RobotStateMachine:
+    _instance = None
+    _instance_lock = threading.Lock()
+    
+    IDLE: Final[str] = "IDLE"
+    MOVE: Final[str] = "MOVE"
+    AVOID_OBSTACLE: Final[str] =
+"AVOID_OBSTACLE"
+
+    def __new__(cls):
+        with cls._instance_lock:
+            if cls._instance is None:
+                cls._instance =
+super().__new__(cls)
+
+cls._instance.current_state = cls.IDLE
+            return cls._instance
+
+    @classmethod
+    def getInstance(cls):
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    def update_state(self, sensor_data: dict) -> str:
+        if self.current_state == self.IDLE:
+            if sensor_data.get("have_target", False):
+                self.current_state = self.MOVE
+
+        elif self.current_state == self.MOVE:
+            if sensor_data.get("obstacle", False):
+                self.current_state = self.AVOID_OBSTACLE
+            elif sensor_data.get("target_reached", False):
+                self.current_state = self.IDLE
+
+        elif self.current_state == self.AVOID_OBSTACLE:
+            if not sensor_data.get("obstacle", False):
+                self.current_state = self.MOVE
+
 
 class PhoenixOdometryThread(threading.Thread):
     _instance = None
@@ -267,7 +306,9 @@ def _install_safe_power_distribution_logging() -> None:
                     table.put("Temperature", 0.0)
                     table.put("ChannelCurrentsList", [])
                     table.put("ChannelCurrentsTotal", 0.0)
-
+        
+        return self.current_state
+        
         LoggedPowerDistribution.instance = _SafeLoggedPowerDistribution(
             moduleId=module_id,
             moduleType=PowerDistribution.ModuleType.kRev,
