@@ -307,8 +307,6 @@ def _install_safe_power_distribution_logging() -> None:
                     table.put("ChannelCurrentsList", [])
                     table.put("ChannelCurrentsTotal", 0.0)
         
-        return self.current_state
-        
         LoggedPowerDistribution.instance = _SafeLoggedPowerDistribution(
             moduleId=module_id,
             moduleType=PowerDistribution.ModuleType.kRev,
