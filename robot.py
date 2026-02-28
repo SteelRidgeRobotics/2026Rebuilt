@@ -101,9 +101,33 @@ class Dwayne(LoggedRobot):
         CommandScheduler.getInstance().run()
         
     self._match_time_pub.set(Timer.getMatchTime())
+
+        # This is sensor data
+        sensor_data = {
+            "have_target": False,
+            "obstacle": False,
+            "target_reached": False
+        }
+        current_state =
+    self.state_machine.update_state(sensor_data)
+
+        # This is state machine control
+        if current_state ==
+    RobotStateMachine.MOVE:
+            self.container.drivetrain.move()
+        elif current_state ==
+    RobotStateMachine.AVOID_OBSTACLE:
+
+    self.container.drivetrain.avoid_obstacle()
+
+        elif current_state ==
+    RobotStateMachine.IDLE:
+            self.container.drivetrain.stop()
+
+        # Field visualization shows the robot's position on the Driver Station field display at the time of the matches
         if self.container.drivetrain is not None:
-            
-            self.container._field.setRobotPose(self.container.drivetrain.get_state().pose)
+
+    self.container._field.setRobotPose(self.container.drivetrain.get_state().pose)
 
     def _simulationPeriodic(self) -> None:
         pass
@@ -163,22 +187,3 @@ class Dwayne(LoggedRobot):
 
     def testPeriodic(self) -> None:
         pass
-
-                    # ADD THESE LINES HERE:
-                sensor_data = {
-                    "have_target": False,  # Replace with your sensors
-                    "obstacle": False,
-                    "target_reached": False
-                }
-                current_state =
-            self.state_machine.update_state(sensor_data)
-
-                # Use state to control robot
-                if current_state ==
-            RobotStateMachine.MOVE:
-                    pass  #
-            self.container.drivetrain.move()
-                elif current_state ==
-            RobotStateMachine.AVOID_OBSTACLE:
-                    pass  #
-            self.container.drivetrain.avoid_obstacle()
