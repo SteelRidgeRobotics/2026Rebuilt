@@ -17,18 +17,6 @@ def get_phase():
 # Using match-case for nicer state handling
 # We match against a tuple of (isAutonomous, isTeleop, time)
 match (DriverStation.isAutonomous(), DriverStation.isTeleop(), time):
-
-    case (True, _, _):
-        return "Auto", game_data
-    
-    case (_, True, t) if t <= 20:
-        return "ENDGAME", game_data
-
-    case (_, True, _):
-        return "TELEOP", game_data
-
-    case _:
-        return "DISABLED", game_data
     
     # 4. FRC Match Timing reasoning
     # During Autonomous, the timer begins at 15.0 and counts down to 0.
