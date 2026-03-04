@@ -1,3 +1,5 @@
+import math
+
 from abc import ABC
 from dataclasses import dataclass, field
 from math import pi
@@ -37,8 +39,7 @@ class IntakeIO(ABC):
         motorAppliedVolts: float = 0.0
         motorCurrent: amperes = 0.0
         motorTemperature: celsius = 0.0
-
-
+    
     def updateInputs(self, inputs: IntakeIOInputs) -> None:
         """Update the inputs with current hardware/simulation state."""
         pass
@@ -161,6 +162,20 @@ class IntakeIOSim(IntakeIO):
 
         self._simMotor.setInputVoltage(self._motorAppliedVolts)
 
+        self._simMotor.update(0.02)
+        if self._closedLoop:
+            
+            self._motorAppliedVolts = self._controller.calculate(
+                self._simMotor.getAngularVelocity()
+            )
+        else:
+            self._controller.reset(
+                self._simMotor.getAngularPosition(),
+                self._simMotor.getAngularVelocity()
+            )
+
+        self._simMotor.setInputVoltage(max(-12.0, min(12.0, self._motorAppliedVolts)))
+        
         # Update inputs
         inputs.motorConnected = True
         inputs.motorVelocity = self._simMotor.getAngularVelocity()
