@@ -37,4 +37,4 @@ class GamePhasesClass:  # This adds everything correctly so self works
    
     def drive_safe_auton(self):
         """Safe autonomous when no game data"""
-        self.drive_forward(24)  # 24 inches 
+        self.drive_forward(24)  # self.drive_forward(24) needs to make the robot drive forward a distance of 24 inches 
