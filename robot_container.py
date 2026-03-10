@@ -25,7 +25,7 @@ from generated.larry.tuner_constants import (TunerConstants as
 from generated.tuner_constants import TunerConstants
 from lib.fuel_sim import FuelSim
 from robot_config import currentRobot, has_subsystem, Robot
-from subsystems.aiming import ShooterAimingTable
+from subsystems.aiming import FiringTable
 from subsystems.climber import ClimberSubsystem
 from subsystems.climber.io import ClimberIOTalonFX, ClimberIOSim, ClimberIO
 from subsystems.feeder import (FeederIOSim, FeederIOTalonFX, FeederSubsystem,
@@ -232,7 +232,6 @@ class RobotContainer:
 
         self.fuel_sim = FuelSim()
         if RobotBase.isSimulation():
-            self.fuel_sim.spawn_starting_fuel()
             self.fuel_sim.register_robot(
                 inchesToMeters(27),
                 inchesToMeters(27),
@@ -242,6 +241,24 @@ class RobotContainer:
             )
             self.fuel_sim.enable_air_resistance()
             self.fuel_sim.start()
+
+        # Firing table
+        firing_table = FiringTable()
+        firing_table.add_sample(
+            FiringTable.Sample(1.7, 0.0, 175.929, 0.1417)
+        )
+        firing_table.add_sample(
+            FiringTable.Sample(2.56, 0.0048828125, 188.496, 0.2133)
+        )
+        firing_table.add_sample(
+            FiringTable.Sample(3.5, 0.0068359375, 219.911, 0.2917)
+        )
+        firing_table.add_sample(
+            FiringTable.Sample(4.49, 0.02026367188, 238.761, 0.3742)
+        )
+        firing_table.add_sample(
+            FiringTable.Sample(5.365, 0.03100585938, 276.460, 0.4471)
+        )
 
         self.superstructure = Superstructure(
             self.intake,
@@ -257,7 +274,7 @@ class RobotContainer:
                 if self.drivetrain is not None
                 else None
             ),
-            aiming_table=ShooterAimingTable(),
+            firing_table=firing_table,
         )
 
         self._setup_swerve_requests()

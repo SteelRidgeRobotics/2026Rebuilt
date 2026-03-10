@@ -308,6 +308,7 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
         """
         return self._sys_id_routine_to_apply.dynamic(direction)
 
+    @autolog_output("Drive/State")
     def get_cached_state(self) -> SwerveDriveState:
         """
         Returns the current state of the drivetrain.
@@ -317,20 +318,12 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
 
     def get_field_relative_speeds(self) -> ChassisSpeeds:
         """
-        Returns chassis velocities in field frame (for SOTM lead calculation).
-        Robot-relative speeds from cached state are rotated by current gyro
-        heading.
+        Returns discretized robot speed relative to the driver station wall.
         """
         state = self._swerve_state
-        robot_speeds = state.speeds
-        robot_rotation = state.pose.rotation()
-        velocity_vector = Translation2d(robot_speeds.vx, robot_speeds.vy)
-        field_velocity = velocity_vector.rotateBy(robot_rotation)
-        return ChassisSpeeds(
-            field_velocity.X(),
-            field_velocity.Y(),
-            robot_speeds.omega
-        )
+        field_speeds = ChassisSpeeds.fromRobotRelativeSpeeds(state.speeds, state.pose.rotation())
+        ChassisSpeeds.discretize(field_speeds, 0.02)
+        return field_speeds
 
     @autolog_output("Drive/Modules/States")
     def _get_module_states(self) -> List[SwerveModuleState]:

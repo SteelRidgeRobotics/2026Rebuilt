@@ -11,10 +11,7 @@ from wpimath.geometry import Pose2d
 from wpimath.kinematics import ChassisSpeeds
 
 from constants import Constants
-from subsystems.aiming import (
-    ShooterAimingTable,
-    get_aiming_parameters,
-)
+from subsystems.aiming import FiringTable
 from subsystems.feeder import FeederSubsystem
 from subsystems.hood import HoodSubsystem
 from subsystems.intake import IntakeSubsystem
@@ -83,7 +80,7 @@ class Superstructure(Subsystem):
         ),
 
         Goal.AIMHUB: (
-            None, None, 
+            None, None,
             LauncherSubsystem.SubsystemState.SCORE,
             HoodSubsystem.SubsystemState.AIMBOT,
             TurretSubsystem.SubsystemState.HUB,
@@ -91,7 +88,7 @@ class Superstructure(Subsystem):
         ),
 
         Goal.AIMOUTPOST: (
-            None, None, 
+            None, None,
             LauncherSubsystem.SubsystemState.PASS,
             HoodSubsystem.SubsystemState.PASS,
             TurretSubsystem.SubsystemState.OUTPOST,
@@ -99,7 +96,7 @@ class Superstructure(Subsystem):
         ),
 
         Goal.AIMDEPOT: (
-            None, None, 
+            None, None,
             LauncherSubsystem.SubsystemState.PASS,
             HoodSubsystem.SubsystemState.PASS,
             TurretSubsystem.SubsystemState.DEPOT,
@@ -117,7 +114,7 @@ class Superstructure(Subsystem):
                  turret: Optional[TurretSubsystem] = None,
                  drivetrain: Optional["SwerveSubsystem"] = None,
                  aim_pose_supplier: Optional[Callable[[], Pose2d]] = None,
-                 aiming_table: Optional[ShooterAimingTable] = None,
+                 firing_table: FiringTable = FiringTable()
                  ) -> None:
         """
         Constructs the superstructure using instance of each subsystem.
@@ -135,7 +132,7 @@ class Superstructure(Subsystem):
         self.turret = turret
         self._drivetrain = drivetrain
         self._aim_pose_supplier = aim_pose_supplier
-        self._aiming_table = aiming_table or ShooterAimingTable()
+        self._firing_table = firing_table
 
         self._goal_state = self.Goal.DEFAULT
         self.set_goal_command(self._goal_state)
@@ -143,59 +140,39 @@ class Superstructure(Subsystem):
         self._turret_check = False
         self._hood_check = False
         self._flywheel_check = False
-        self._distance_to_hub = 0.0
-        self._virtual_distance_m = 0.0
-
         self._checks_override = False
-
-        # Prevents loop overruns shooting a fuel way below minimum speed.
-        self._time_since_last_goal = Timer()
-        self._time_since_last_goal.start()
 
     # pylint: disable=too-many-branches
     def periodic(self):
         if DriverStation.isDisabled():
             return
 
-        # Unified aiming: Virtual Goal + LUT setpoints (always when
-        # aiming/launching)
         if (self._goal_state in (self.Goal.LAUNCH,
                                  self.Goal.AIMHUB) and
-                self._aim_pose_supplier and self._aiming_table):
-            real_goal = (
-                Constants.GoalLocations.BLUE_HUB
-                if not AutoBuilder.shouldFlip()
-                else Constants.GoalLocations.RED_HUB
-            )
-            field_speeds = (
+                self._aim_pose_supplier and self._firing_table):
+
+            # Take the bloody shot
+            sample = self._firing_table.get_moving_shot(
+                self._aim_pose_supplier(),
+                Constants.GoalLocations.RED_HUB
+                if AutoBuilder.shouldFlip()
+                else Constants.GoalLocations.BLUE_HUB,
                 self._drivetrain.get_field_relative_speeds()
-                if self._drivetrain is not None
-                else ChassisSpeeds(0.0, 0.0, 0.0)
             )
-            robot_pose = self._aim_pose_supplier()
-            params = get_aiming_parameters(
-                robot_pose=robot_pose,
-                field_speeds=field_speeds,
-                real_goal_pose=real_goal,
-                aiming_table=self._aiming_table,
-            )
-            self._distance_to_hub = math.hypot(
-                real_goal.X() - robot_pose.X(),
-                real_goal.Y() - robot_pose.Y(),
-            )
-            self._virtual_distance_m = params.virtual_dist_m
-            if self.turret is not None:
-                self.turret.set_target_field_angle(params.turret_angle_rad)
-            if self.hood is not None:
-                self.hood.set_aiming_setpoint(params.hood_rotations)
-            if self.launcher is not None:
-                self.launcher.set_aiming_setpoint(params.rps)
+            if self.turret:
+                self.turret.set_target_field_angle(sample.turret_angle)
+            sample = sample.sample # lovely line
+            if self.hood:
+                self.hood.set_aiming_setpoint(sample.hood_angle)
+            if self.launcher:
+                self.launcher.set_aiming_setpoint(sample.flywheel_speed)
+
         else:
-            if self.turret is not None:
+            if self.turret:
                 self.turret.set_target_field_angle(None)
-            if self.hood is not None:
+            if self.hood:
                 self.hood.set_aiming_setpoint(None)
-            if self.launcher is not None:
+            if self.launcher:
                 self.launcher.set_aiming_setpoint(None)
 
         self._turret_check = (
@@ -262,18 +239,6 @@ class Superstructure(Subsystem):
             self._flywheel_check
         )
         Logger.recordOutput("Superstructure/Overridden", self._checks_override)
-        Logger.recordOutput(
-            "Superstructure/DistanceToHub",
-            self._distance_to_hub
-        )
-        Logger.recordOutput(
-            "Superstructure/VirtualDistance",
-            self._virtual_distance_m
-        )
-        Logger.recordOutput(
-            "Superstructure/Feeder Good to activate",
-            self._time_since_last_goal.get() > 0.5
-        )
 
     def _set_goal(self, goal: Goal) -> None:
         (intake_state, feeder_state, launcher_state, hood_state,
@@ -299,7 +264,6 @@ class Superstructure(Subsystem):
 
         if superstructure_state:
             self._goal_state = goal
-            self._time_since_last_goal.reset()
 
     def _toggle_override(self) -> None:
         self._checks_override = not self._checks_override

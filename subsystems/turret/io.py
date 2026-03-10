@@ -171,7 +171,7 @@ class TurretIOSim(TurretIO):
         self.applied_volts: float = 0.0
 
         self.controller = PIDController(
-            Constants.TurretConstants.GAINS.k_p / (2 * pi),
+            Constants.TurretConstants.GAINS.k_p / (2 * pi) * 5,
             Constants.TurretConstants.GAINS.k_i / (2 * pi),
             Constants.TurretConstants.GAINS.k_d / (2 * pi),
         )
