@@ -35,22 +35,24 @@ wpilib.Timer.getFPGATimestamp()
     def autonomousPeriodic(self):
         phase, data = get_phase()
 
-        # Fallback logic: if we are in AUTO and have no valid data
         if phase == "AUTO":
-            # Example timeout: 1.0s after auto starts, stop waiting for FMS
-            elapsed =
-wpilib.Timer.getFPGATimestamp() -
-self.auto_start_time
-            if not data.strip() or data
-not in ("L", "R"):
+            elapsed = wpilib.Timer.getFPGATimestamp() - self.auto_start_time
+            
+            if not data.strip() or data not in ("L", "R"):
                 if elapsed > 1.0:
-                    # Fallback autonomous when FMS never gave a valid message
-
-self.drive_safe_auton()
+                    # after 1s with no valid data, run fallback
+                    self.drive_safe_auton()
+                else:
+                    # still within the waiting window; either do nothing
+                    # or something extremely conservative
+                    self.drive_safe_auton()  # or 'pass' if you really want to wait
             else:
-                # We have valid data
                 if "L" in data:
-
+                    self.drive_to_left_goal()
+                elif "R" in data:
+                    self.drive_to_right_goal()
+                else:
+                    self.drive_safe_auton()
 self.drive_to_left_goal()
                 elif "R" in data:
 
@@ -63,17 +65,27 @@ self.drive_safe_auton()
         phase, data = get_phase()
         match phase:
             case "AUTO":  
-                # Normally 
+                # Normally you won't run auto logic from teleopPeriodic,
+                # but if you really want  this here, keep the same fallback idea:
                 if not data or data.strip() == "":
-                    self.drive_safe_auton()
+                    
+self.drive_safe_auton()
                 elif "L" in data:
-                    self.drive_to_left_goal()
+                    
+self.drive_to_left_goal()
                 elif "R" in data:
-                    self.drive_to_right_goal()
+                    
+self.drive_to_right_goal()
                 else:
-                    self.drive_safe_auton()
+                    
+self.drive_safe_auton()
             case "ENDGAME":
-                self.operator_controller.setRumble(wpilib.XboxController.RumbleType.kBothRumble, 1.0)
+                
+self.operator_controller.setRumble(
+    
+wpilib.XboxController.RumbleType.kBothRum
+ble, 1.0
+                )
             case "TELEOP":
                 pass
    
