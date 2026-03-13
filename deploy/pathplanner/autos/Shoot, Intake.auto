@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Circle 2 1"
+            "pathName": "Start Depot to Shoot"
           }
         },
         {
@@ -20,67 +20,6 @@
           "type": "named",
           "data": {
             "name": "Launch"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Default"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Circle 2 2"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Aim to Hub"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Circle 2 3"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Launch"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Circle 2 4"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Default"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Circle 2 5"
           }
         },
         {
@@ -90,9 +29,39 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Default"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "Circle 2 6"
+            "pathName": "Under Trench Prep"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Under Trench Intake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Default"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "AfterIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot"
           }
         },
         {
@@ -110,7 +79,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 1.0
+            "waitTime": 4.0
           }
         },
         {
@@ -120,27 +89,21 @@
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "Climber Extend"
+            "pathName": "Under Trench Prep"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Circle 2 7 (Climb)"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Climber Stow"
+            "pathName": "Under Trench"
           }
         }
       ]
     }
   },
-  "resetOdom": false,
-  "folder": "Stupid Circle Stuff",
+  "resetOdom": true,
+  "folder": null,
   "choreoAuto": false
 }

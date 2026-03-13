@@ -38,6 +38,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Stupid Circle Stuff",
   "choreoAuto": false
 }

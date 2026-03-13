@@ -7,38 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Circle 6 1"
+            "pathName": "Under Trench Intake"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Aim to Hub"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Circle 6 2"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Launch"
-                }
-              }
-            ]
+            "name": "Intake"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Circle 6 3"
+            "pathName": "AfterIntake"
           }
         },
         {
@@ -48,27 +29,51 @@
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot"
+          }
+        },
+        {
           "type": "named",
           "data": {
-            "name": "Climber Extend"
+            "name": "Aim to Hub"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Launch"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 7.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Default"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Circle 6 4 (Climb)"
+            "pathName": "Under Trench Prep"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "Climber Stow"
+            "pathName": "Under Trench"
           }
         }
       ]
     }
   },
-  "resetOdom": false,
-  "folder": "Stupid Circle Stuff",
+  "resetOdom": true,
+  "folder": null,
   "choreoAuto": false
 }

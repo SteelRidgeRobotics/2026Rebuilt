@@ -15,7 +15,9 @@
     "PSN",
     "PSNS"
   ],
-  "autoFolders": [],
+  "autoFolders": [
+    "Stupid Circle Stuff"
+  ],
   "defaultMaxVel": 1.75,
   "defaultMaxAccel": 4.0,
   "defaultMaxAngVel": 720.0,

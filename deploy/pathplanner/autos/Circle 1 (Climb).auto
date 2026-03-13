@@ -125,6 +125,6 @@
     }
   },
   "resetOdom": false,
-  "folder": null,
+  "folder": "Stupid Circle Stuff",
   "choreoAuto": false
 }

@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Circle 2 1"
+            "pathName": "Start Depot to Shoot"
           }
         },
         {
@@ -25,7 +25,25 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 1.0
+            "waitTime": 3.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot to Depot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Intake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Depot Start to Depot End"
           }
         },
         {
@@ -37,62 +55,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Circle 2 2"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Aim to Hub"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Circle 2 3"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Launch"
-                }
-              }
-            ]
+            "pathName": "Depot to Depot End"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Circle 2 4"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Default"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Circle 2 5"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Circle 2 6"
+            "pathName": "Depot End to Shoot"
           }
         },
         {
@@ -110,37 +79,25 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Default"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Climber Extend"
+            "waitTime": 3.0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Circle 2 7 (Climb)"
+            "pathName": "Under Trench Prep"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "Climber Stow"
+            "pathName": "Under Trench"
           }
         }
       ]
     }
   },
-  "resetOdom": false,
-  "folder": "Stupid Circle Stuff",
+  "resetOdom": true,
+  "folder": null,
   "choreoAuto": false
 }
