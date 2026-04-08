@@ -289,19 +289,19 @@ class Superstructure(Subsystem):
             (None, None, None, None, None, False)
         )
 
-        if not intake_state is None:
+        if intake_state:
             self.intake.set_desired_state(intake_state)
 
-        if not feeder_state is None:
+        if feeder_state and not self.feeder.is_locked:
             self.feeder.set_desired_state(feeder_state)
 
-        if not launcher_state is None:
+        if launcher_state:
             self.launcher.set_desired_state(launcher_state)
         
         if not hood_state is None:
             self.hood.set_desired_state(hood_state)
 
-        if not turret_state is None:
+        if turret_state:
             self.turret.set_desired_state(turret_state)
 
         if superstructure_state:
