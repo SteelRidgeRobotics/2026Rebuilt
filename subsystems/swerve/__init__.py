@@ -16,7 +16,7 @@ from phoenix6 import SignalLogger, swerve, units, utils
 from phoenix6.phoenix_native import (SwerveDriveState_t, SwerveModuleState_t,
                                      SwerveModulePosition_t, Native)
 from phoenix6.swerve import SwerveModuleState
-from phoenix6.swerve.requests import ApplyRobotSpeeds
+from phoenix6.swerve.requests import ApplyRobotSpeeds, FieldCentricFacingAngle
 from pykit.autolog import autologgable_output, autolog_output, autolog
 from pykit.logger import Logger
 from wpilib import DriverStation, Notifier, RobotController
@@ -24,6 +24,9 @@ from wpilib.sysid import SysIdRoutineLog
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 from wpiutil.wpistruct import make_wpistruct
+from phoenix6.swerve.utility.phoenix_pid_controller import PhoenixPIDController
+
+
 
 # Robot config
 from robot_config import currentRobot, Robot
@@ -285,6 +288,12 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
         if utils.is_simulation():
             self._start_sim_thread()
 
+
+        ### variables for auto align
+        self.translation_controller = PhoenixPIDController(0.0, 0.0, 0.0)
+        self._field_centric_facing_angle = FieldCentricFacingAngle()
+        self.heading_controller = self._field_centric_facing_angle.heading_controller
+
     def apply_request(
         self, request: Callable[[], swerve.requests.SwerveRequest]
     ) -> Command:
@@ -441,3 +450,79 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
             self,
             utils.fpga_to_current_time(timestamp)
         )
+    
+
+
+
+    def with_translation_pid(self, p: float, i: float, d: float) -> Self:
+        """
+        Modifies the translation PID gains and returns this request for method chaining.
+        
+        :param p: The proportional gain
+        :type p: float
+        :param i: The integral gain
+        :type i: float
+        :param d: The derivative gain
+        :type d: float
+        :returns: This request
+        :rtype: DriverAssist
+        """
+        self.translation_controller.setPID(p, i, d)
+        return self
+
+    def with_heading_pid(self, p: float, i: float, d: float) -> Self:
+        """
+        Modifies the heading PID gains and returns this request for method chaining.
+        
+        :param p: The proportional gain
+        :type p: float
+        :param i: The integral gain
+        :type i: float
+        :param d: The derivative gain
+        :type d: float
+        :returns: This request
+        :rtype: DriverAssist
+        """
+        self.heading_controller.setPID(p, i, d)
+        return self
+    
+
+    def with_target_pose(self, new_target_pose: Pose2d) -> Self:
+        """
+        Modifies the pose to align with.
+        :param new_target_pose: New target pose
+        :type new_target_pose: Pose2d
+        :return: This request
+        :rtype: DriverAssist
+        """
+        self.target_pose = new_target_pose
+        return self
+
+    def get_target_pose(self, target, current_pose: Pose2d) -> Pose2d:
+
+        
+        ### goal: get the disired angle by using trig to find the angle between the current pose and the target pose
+        import constants
+        is_red = DriverStation.getAlliance() == DriverStation.Alliance.kRed
+        depot_pose = constants.GoalLocations.RED_DEPOT_POSE if is_red else constants.GoalLocations.BLUE_DEPOT_POSE
+        hub_pose = constants.GoalLocations.RED_HUB_POSE if is_red else constants.GoalLocations.BLUE_HUB_POSE
+        outpost_pose = constants.GoalLocations.RED_OUTPOST_POSE if is_red else constants.GoalLocations.BLUE_OUTPOST_POSE
+        match target.lower():
+            case "hub":
+                if is_red:
+                    new_angle = math.atan2(hub_pose.Y() - current_pose.Y(), hub_pose.X() - current_pose.X())
+                else:
+                    new_angle = math.atan2(hub_pose.Y() - current_pose.Y(), hub_pose.X() - current_pose.X())
+            case "outpost":
+                if is_red:
+                    new_angle = math.atan2(outpost_pose.Y() - current_pose.Y(), outpost_pose.X() - current_pose.X())
+                else:
+                    new_angle = math.atan2(outpost_pose.Y() - current_pose.Y(), outpost_pose.X() - current_pose.X())
+            case "depot":
+                if is_red:
+                    new_angle = math.atan2(depot_pose.Y() - current_pose.Y(), depot_pose.X() - current_pose.X())
+                else:
+                    new_angle = math.atan2(depot_pose.Y() - current_pose.Y(), depot_pose.X() - current_pose.X())
+        
+
+        return Pose2d(current_pose.X(), current_pose.Y(), Rotation2d(new_angle + math.pi))

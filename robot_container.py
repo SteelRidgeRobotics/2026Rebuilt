@@ -289,20 +289,40 @@ class RobotContainer:
             "Launch",
             self.superstructure.set_goal_command(Superstructure.Goal.LAUNCH).alongWith(self.intake.set_desired_state_command(self.intake.SubsystemState.INTAKE))
         )
-        NamedCommands.registerCommand(
-            "Aim to Depot",
-            self.superstructure.set_goal_command(Superstructure.Goal.AIMDEPOT)
-        )
-        NamedCommands.registerCommand(
-            "Aim to Outpost",
-            self.superstructure.set_goal_command(
-                Superstructure.Goal.AIMOUTPOST
+        if self.turret is not None:
+            NamedCommands.registerCommand(
+                "Aim to Depot",
+                self.superstructure.set_goal_command(Superstructure.Goal.AIMDEPOT)
             )
-        )
-        NamedCommands.registerCommand(
-            "Aim to Hub",
-            self.superstructure.set_goal_command(Superstructure.Goal.AIMHUB)
-        )
+            NamedCommands.registerCommand(
+                "Aim to Outpost",
+                self.superstructure.set_goal_command(
+                    Superstructure.Goal.AIMOUTPOST
+                )
+            )
+            NamedCommands.registerCommand(
+                "Aim to Hub",
+                self.superstructure.set_goal_command(Superstructure.Goal.AIMHUB)
+            )
+        else:
+            NamedCommands.registerCommand(
+                "Aim to Depot",
+                self.superstructure.set_goal_command(
+                    Superstructure.Goal.AIM_NOTURRET
+                )
+            )
+            NamedCommands.registerCommand(
+                "Aim to Outpost",
+                self.superstructure.set_goal_command(
+                    Superstructure.Goal.AIM_NOTURRET
+                )
+            )
+            NamedCommands.registerCommand(
+                "Aim to Hub",
+                self.superstructure.set_goal_command(
+                    Superstructure.Goal.AIM_NOTURRET
+                )
+            )
         NamedCommands.registerCommand(
             "Intake",
             self.superstructure.set_goal_command(Superstructure.Goal.INTAKE)
@@ -365,6 +385,17 @@ class RobotContainer:
             .with_steer_request_type(
                 swerve.SwerveModule.SteerRequestType.POSITION
             )
+        )
+
+        ### the code below is taken from leviathin and probably dosent work but if it does it will need to be retuned
+        self._driver_assist: SwerveSubsystem = (
+            SwerveSubsystem()
+            .with_deadband(self._max_speed * 0.01)
+            .with_rotational_deadband(self._max_angular_rate * 0.02)
+            .with_drive_request_type(swerve.SwerveModule.DriveRequestType.VELOCITY)
+            .with_steer_request_type(swerve.SwerveModule.SteerRequestType.POSITION)
+            .with_translation_pid(Constants.AutoAlignConstants.TRANSLATION_P, Constants.AutoAlignConstants.TRANSLATION_I, Constants.AutoAlignConstants.TRANSLATION_D)
+            .with_heading_pid(Constants.AutoAlignConstants.HEADING_P, Constants.AutoAlignConstants.HEADING_I, Constants.AutoAlignConstants.HEADING_D)
         )
 
         self._brake = swerve.requests.SwerveDriveBrake()
@@ -515,6 +546,18 @@ class RobotContainer:
                 "Turret or hood subsystem not available on this robot, "
                 "unable to bind turret buttons"
             )
+
+            ###A lot of this is stolen from leviathin so probably wont work 
+            self._function_controller.y().onTrue(
+                self.drvetrain.runOnce(lambda: self._driver_assist.with_target_pose(SwerveSubsystem.get_target_pose("hub",self.drivetrain.get_cached_state().pose))
+                ).whileTrue(self.drivetrain.apply_request(
+                lambda: self._driver_assist
+                .with_velocity_x(-hid.getLeftY() * self._max_speed)
+                .with_velocity_y(-hid.getLeftX() * self._max_speed)
+                )
+            ))
+            
+            
 
         if self.climber is not None:
             self._function_controller.povUp().onTrue(

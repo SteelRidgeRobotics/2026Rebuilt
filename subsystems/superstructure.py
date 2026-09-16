@@ -40,7 +40,7 @@ class Superstructure(Subsystem):
         AIMOUTPOST = auto()  # Point turret to the outpost side
         AIMDEPOT = auto()  # Point turret to the depot side
         STOPLAUNCH = auto()  # Stop the launcher
-        # center
+        AIM_NOTURRET = auto()  # Aim without turret
 
     # Map each goal to each subsystem state to reduce code complexity
     _goal_to_states: dict[Goal,
@@ -108,6 +108,12 @@ class Superstructure(Subsystem):
             HoodSubsystem.SubsystemState.AIMBOT,
             TurretSubsystem.SubsystemState.DEPOT,
             True
+        ),
+        Goal.AIM_NOTURRET: (
+            None, None,
+            LauncherSubsystem.SubsystemState.SCORE,
+            HoodSubsystem.SubsystemState.AIMBOT,
+            None, True
         ),
 
     }

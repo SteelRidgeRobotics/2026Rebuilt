@@ -213,6 +213,15 @@ class Constants:
         RED_HUB = Pose2d(11.915394, 4.034536, 180)
         RED_DEPOT_PASS = Pose2d(14.228191, 2.017268, 180)
         RED_OUTPOST_PASS = Pose2d(14.228191, 6.051804, 180)
+        
+    class AutoAlignConstants:
+        TRANSLATION_P = 9
+        TRANSLATION_I = 0
+        TRANSLATION_D = 0.1
+        
+        HEADING_P = 1
+        HEADING_I = 0
+        HEADING_D = 0.2
 
 
 # Initialize robot-specific hardware configurations
@@ -304,5 +313,11 @@ def _init_hardware_configs():
             #Constants.FeederConstants.FEED_FORWARD = 3.0
 
 
+
+
+
+
 # Initialize hardware configs at module load time
 _init_hardware_configs()
+
+
