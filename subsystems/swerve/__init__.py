@@ -502,11 +502,11 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
 
         
         ### goal: get the disired angle by using trig to find the angle between the current pose and the target pose
-        import constants
+        from constants import Constants
         is_red = DriverStation.getAlliance() == DriverStation.Alliance.kRed
-        depot_pose = constants.GoalLocations.RED_DEPOT_POSE if is_red else constants.GoalLocations.BLUE_DEPOT_POSE
-        hub_pose = constants.GoalLocations.RED_HUB_POSE if is_red else constants.GoalLocations.BLUE_HUB_POSE
-        outpost_pose = constants.GoalLocations.RED_OUTPOST_POSE if is_red else constants.GoalLocations.BLUE_OUTPOST_POSE
+        depot_pose = Constants.GoalLocations.RED_DEPOT_PASS if is_red else Constants.GoalLocations.BLUE_DEPOT_PASS
+        hub_pose = Constants.GoalLocations.RED_HUB if is_red else Constants.GoalLocations.BLUE_HUB
+        outpost_pose = Constants.GoalLocations.RED_OUTPOST_PASS if is_red else Constants.GoalLocations.BLUE_OUTPOST_PASS
         match target.lower():
             case "hub":
                 if is_red:

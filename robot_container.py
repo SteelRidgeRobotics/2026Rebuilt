@@ -38,6 +38,7 @@ from subsystems.launcher import (LauncherIOSim, LauncherIOTalonFX,
                                  LauncherSubsystem, LauncherIO)
 from subsystems.superstructure import Superstructure
 from subsystems.swerve import SwerveSubsystem
+from subsystems.swerve.requests import DriverAssist
 from subsystems.turret import TurretSubsystem
 from subsystems.turret.io import TurretIOTalonFX, TurretIOSim, TurretIO
 from subsystems.vision import VisionSubsystem
@@ -59,7 +60,7 @@ class RobotContainer:
             self._max_speed = LarryTunerConstants.speed_at_12_volts
 
         self._driver_controller = commands2.button.CommandXboxController(0)
-        self._function_controller = commands2.button.CommandXboxController(1)
+        self._function_controller = commands2.button.CommandXboxController(0)
 
         # Field2d for Elastic dashboard (robot position on field image)
         self._field = Field2d()
@@ -388,8 +389,8 @@ class RobotContainer:
         )
 
         ### the code below is taken from leviathin and probably dosent work but if it does it will need to be retuned
-        self._driver_assist: SwerveSubsystem = (
-            SwerveSubsystem()
+        self._driver_assist: DriverAssist = (
+            DriverAssist()
             .with_deadband(self._max_speed * 0.01)
             .with_rotational_deadband(self._max_angular_rate * 0.02)
             .with_drive_request_type(swerve.SwerveModule.DriveRequestType.VELOCITY)
@@ -513,7 +514,7 @@ class RobotContainer:
 
         if self.turret is not None and self.hood is not None:
 
-            self._function_controller.y().onTrue(
+            self._driver_controller.y().onTrue(
                 self.superstructure.set_goal_command(
                     Superstructure.Goal.AIMHUB
                 )
@@ -548,13 +549,14 @@ class RobotContainer:
             )
 
             ###A lot of this is stolen from leviathin so probably wont work 
-            self._function_controller.y().onTrue(
-                self.drvetrain.runOnce(lambda: self._driver_assist.with_target_pose(SwerveSubsystem.get_target_pose("hub",self.drivetrain.get_cached_state().pose))
-                ).whileTrue(self.drivetrain.apply_request(
-                lambda: self._driver_assist
-                .with_velocity_x(-hid.getLeftY() * self._max_speed)
-                .with_velocity_y(-hid.getLeftX() * self._max_speed)
-                )
+        self._driver_controller.y().whileTrue(
+            self.drivetrain.runOnce(lambda: self._driver_assist.with_target_pose(SwerveSubsystem.get_target_pose(self, "hub",self.drivetrain.get_cached_state().pose))
+            ).andThen(
+                self.drivetrain.apply_request(
+                    lambda: self._driver_assist
+                    .with_velocity_x(-hid.getLeftY() * self._max_speed)
+                    .with_velocity_y(-hid.getLeftX() * self._max_speed)
+            )
             ))
             
             
