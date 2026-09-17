@@ -109,12 +109,6 @@ class Superstructure(Subsystem):
             TurretSubsystem.SubsystemState.DEPOT,
             True
         ),
-        Goal.AIM_NOTURRET: (
-            None, None,
-            LauncherSubsystem.SubsystemState.SCORE,
-            HoodSubsystem.SubsystemState.AIMBOT,
-            None, True
-        ),
 
     }
 

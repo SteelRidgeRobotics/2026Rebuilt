@@ -227,7 +227,6 @@ class Constants:
 # Initialize robot-specific hardware configurations
 def _init_hardware_configs():
     """Initialize hardware configurations based on detected robot."""
-
     match currentRobot:
         case Robot.LARRY:
             # Climber
@@ -246,7 +245,6 @@ def _init_hardware_configs():
             # as needed
             Constants.ClimberConstants.SUPPLY_CURRENT = 30.0
             Constants.ClimberConstants.MOMENT_OF_INERTIA = 0.3
-
         case _:  # COMP or UNKNOWN defaults to COMP
             # Climber
             Constants.ClimberConstants.GEAR_RATIO = 61504.0 / 189  # Same or
@@ -311,12 +309,6 @@ def _init_hardware_configs():
             Constants.FeederConstants.SUPPLY_CURRENT = 30.0  # Amperes
             Constants.FeederConstants.MOMENT_OF_INERTIA = 0.0067
             #Constants.FeederConstants.FEED_FORWARD = 3.0
-
-
-
-
-
-
 # Initialize hardware configs at module load time
 _init_hardware_configs()
 

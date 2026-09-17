@@ -450,53 +450,6 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
             self,
             utils.fpga_to_current_time(timestamp)
         )
-    
-
-
-
-    def with_translation_pid(self, p: float, i: float, d: float) -> Self:
-        """
-        Modifies the translation PID gains and returns this request for method chaining.
-        
-        :param p: The proportional gain
-        :type p: float
-        :param i: The integral gain
-        :type i: float
-        :param d: The derivative gain
-        :type d: float
-        :returns: This request
-        :rtype: DriverAssist
-        """
-        self.translation_controller.setPID(p, i, d)
-        return self
-
-    def with_heading_pid(self, p: float, i: float, d: float) -> Self:
-        """
-        Modifies the heading PID gains and returns this request for method chaining.
-        
-        :param p: The proportional gain
-        :type p: float
-        :param i: The integral gain
-        :type i: float
-        :param d: The derivative gain
-        :type d: float
-        :returns: This request
-        :rtype: DriverAssist
-        """
-        self.heading_controller.setPID(p, i, d)
-        return self
-    
-
-    def with_target_pose(self, new_target_pose: Pose2d) -> Self:
-        """
-        Modifies the pose to align with.
-        :param new_target_pose: New target pose
-        :type new_target_pose: Pose2d
-        :return: This request
-        :rtype: DriverAssist
-        """
-        self.target_pose = new_target_pose
-        return self
 
     def get_target_pose(self, target, current_pose: Pose2d) -> Pose2d:
 
@@ -507,22 +460,13 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
         depot_pose = Constants.GoalLocations.RED_DEPOT_PASS if is_red else Constants.GoalLocations.BLUE_DEPOT_PASS
         hub_pose = Constants.GoalLocations.RED_HUB if is_red else Constants.GoalLocations.BLUE_HUB
         outpost_pose = Constants.GoalLocations.RED_OUTPOST_PASS if is_red else Constants.GoalLocations.BLUE_OUTPOST_PASS
+        robo_y = abs(current_pose.Y())
+        robo_x = abs(current_pose.X())
         match target.lower():
             case "hub":
-                if is_red:
-                    new_angle = math.atan2(hub_pose.Y() - current_pose.Y(), hub_pose.X() - current_pose.X())
-                else:
-                    new_angle = math.atan2(hub_pose.Y() - current_pose.Y(), hub_pose.X() - current_pose.X())
+                new_angle = math.atan2(hub_pose.Y() - robo_y, hub_pose.X() - robo_x)
             case "outpost":
-                if is_red:
-                    new_angle = math.atan2(outpost_pose.Y() - current_pose.Y(), outpost_pose.X() - current_pose.X())
-                else:
-                    new_angle = math.atan2(outpost_pose.Y() - current_pose.Y(), outpost_pose.X() - current_pose.X())
+                new_angle = math.atan2(outpost_pose.Y() - robo_y, outpost_pose.X() - robo_x)
             case "depot":
-                if is_red:
-                    new_angle = math.atan2(depot_pose.Y() - current_pose.Y(), depot_pose.X() - current_pose.X())
-                else:
-                    new_angle = math.atan2(depot_pose.Y() - current_pose.Y(), depot_pose.X() - current_pose.X())
-        
-
-        return Pose2d(current_pose.X(), current_pose.Y(), Rotation2d(new_angle + math.pi))
+                new_angle = math.atan2(depot_pose.Y() - robo_y, depot_pose.X() - robo_x)
+        return Pose2d(robo_x, robo_y, Rotation2d(new_angle + math.pi))
