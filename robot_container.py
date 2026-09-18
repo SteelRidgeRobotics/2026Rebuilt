@@ -60,7 +60,7 @@ class RobotContainer:
             self._max_speed = LarryTunerConstants.speed_at_12_volts
 
         self._driver_controller = commands2.button.CommandXboxController(0)
-        self._function_controller = commands2.button.CommandXboxController(0)
+        self._function_controller = commands2.button.CommandXboxController(1)
 
         # Field2d for Elastic dashboard (robot position on field image)
         self._field = Field2d()
@@ -290,40 +290,20 @@ class RobotContainer:
             "Launch",
             self.superstructure.set_goal_command(Superstructure.Goal.LAUNCH).alongWith(self.intake.set_desired_state_command(self.intake.SubsystemState.INTAKE))
         )
-        if self.turret is not None:
-            NamedCommands.registerCommand(
-                "Aim to Depot",
-                self.superstructure.set_goal_command(Superstructure.Goal.AIMDEPOT)
+        NamedCommands.registerCommand(
+            "Aim to Depot",
+            self.superstructure.set_goal_command(Superstructure.Goal.AIMDEPOT)
+        )
+        NamedCommands.registerCommand(
+            "Aim to Outpost",
+            self.superstructure.set_goal_command(
+            Superstructure.Goal.AIMOUTPOST
             )
-            NamedCommands.registerCommand(
-                "Aim to Outpost",
-                self.superstructure.set_goal_command(
-                    Superstructure.Goal.AIMOUTPOST
-                )
-            )
-            NamedCommands.registerCommand(
-                "Aim to Hub",
-                self.superstructure.set_goal_command(Superstructure.Goal.AIMHUB)
-            )
-        else:
-            NamedCommands.registerCommand(
-                "Aim to Depot",
-                self.superstructure.set_goal_command(
-                    Superstructure.Goal.AIM_NOTURRET
-                )
-            )
-            NamedCommands.registerCommand(
-                "Aim to Outpost",
-                self.superstructure.set_goal_command(
-                    Superstructure.Goal.AIM_NOTURRET
-                )
-            )
-            NamedCommands.registerCommand(
-                "Aim to Hub",
-                self.superstructure.set_goal_command(
-                    Superstructure.Goal.AIM_NOTURRET
-                )
-            )
+        )
+        NamedCommands.registerCommand(
+            "Aim to Hub",
+            self.superstructure.set_goal_command(Superstructure.Goal.AIMHUB)
+        )
         NamedCommands.registerCommand(
             "Intake",
             self.superstructure.set_goal_command(Superstructure.Goal.INTAKE)
