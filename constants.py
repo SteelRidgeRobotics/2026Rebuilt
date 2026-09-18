@@ -1,6 +1,7 @@
 """Constants for everything"""
 #pylint: disable=too-few-public-methods, missing-class-docstring
 from enum import Enum, auto
+import math
 from typing import Final
 
 from phoenix6.configs.config_groups import Slot0Configs, Slot1Configs
@@ -172,6 +173,13 @@ class Constants:
         # Only switch to other side of center when goal is at least this
         # many degrees past middle
         CROSS_MIDDLE_HYSTERESIS_DEGREES = 2.0
+        HEADING_TOLERANCE_RADIANS = math.radians(3.0)
+
+    class AutoAlignConstants:
+        HEADING_KP = 9
+        HEADING_KI = 0.0
+        HEADING_KD = .1
+        HEADING_TOLERANCE_RADIANS = math.radians(3.0)
 
     class HoodConstants:
         GEAR_RATIO = 15.5555 # old 68 / 3
@@ -213,15 +221,6 @@ class Constants:
         RED_HUB = Pose2d(11.915394, 4.034536, 180)
         RED_DEPOT_PASS = Pose2d(14.228191, 2.017268, 180)
         RED_OUTPOST_PASS = Pose2d(14.228191, 6.051804, 180)
-        
-    class AutoAlignConstants:
-        TRANSLATION_P = 9
-        TRANSLATION_I = 0
-        TRANSLATION_D = 0.1
-        
-        HEADING_P = 1
-        HEADING_I = 0
-        HEADING_D = 0.2
 
 
 # Initialize robot-specific hardware configurations

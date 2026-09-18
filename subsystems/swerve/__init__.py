@@ -30,6 +30,7 @@ from phoenix6.swerve.utility.phoenix_pid_controller import PhoenixPIDController
 
 # Robot config
 from robot_config import currentRobot, Robot
+from subsystems import superstructure
 
 if currentRobot == Robot.LARRY:
     from generated.larry.tuner_constants import TunerSwerveDrivetrain
@@ -451,22 +452,30 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
             utils.fpga_to_current_time(timestamp)
         )
 
-    def get_target_pose(self, target, current_pose: Pose2d) -> Pose2d:
+    def get_target_pose(self, current_pose: Pose2d) -> Pose2d:
 
         
         ### goal: get the disired angle by using trig to find the angle between the current pose and the target pose
         from constants import Constants
+        from subsystems.superstructure import Superstructure
         is_red = DriverStation.getAlliance() == DriverStation.Alliance.kRed
+        #is_red = True  # Initialize is_red to False to test blue alliance behavior
         depot_pose = Constants.GoalLocations.RED_DEPOT_PASS if is_red else Constants.GoalLocations.BLUE_DEPOT_PASS
         hub_pose = Constants.GoalLocations.RED_HUB if is_red else Constants.GoalLocations.BLUE_HUB
         outpost_pose = Constants.GoalLocations.RED_OUTPOST_PASS if is_red else Constants.GoalLocations.BLUE_OUTPOST_PASS
-        robo_y = abs(current_pose.Y())
-        robo_x = abs(current_pose.X())
-        match target.lower():
-            case "hub":
-                new_angle = math.atan2(hub_pose.Y() - robo_y, hub_pose.X() - robo_x)
-            case "outpost":
-                new_angle = math.atan2(outpost_pose.Y() - robo_y, outpost_pose.X() - robo_x)
-            case "depot":
-                new_angle = math.atan2(depot_pose.Y() - robo_y, depot_pose.X() - robo_x)
-        return Pose2d(robo_x, robo_y, Rotation2d(new_angle + math.pi))
+        robo_y = current_pose.Y()
+        robo_x = current_pose.X()
+
+
+        
+        goal = superstructure.Superstructure._get_goal()
+
+        if goal == superstructure.Superstructure.Goal.AIMHUB:
+            new_angle = math.atan2(hub_pose.Y() - robo_y, hub_pose.X() - robo_x) + math.pi
+        elif goal == superstructure.Superstructure.Goal.AIMOUTPOST:
+            new_angle = math.atan2(outpost_pose.Y() - robo_y, outpost_pose.X() - robo_x) + math.pi
+        elif goal == superstructure.Superstructure.Goal.AIMDEPOT:
+            new_angle = math.atan2(depot_pose.Y() - robo_y, depot_pose.X() - robo_x) + math.pi
+        else:
+            new_angle = current_pose.rotation().radians()
+        return Rotation2d(new_angle)
