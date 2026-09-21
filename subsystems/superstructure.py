@@ -91,7 +91,7 @@ class Superstructure(Subsystem):
             None, None, 
             LauncherSubsystem.SubsystemState.SCORE,
             HoodSubsystem.SubsystemState.AIMBOT,
-            TurretSubsystem.SubsystemState.HUB,
+            None,
             True  # track so aiming block runs and DistanceToHub is updated
         ),
 
@@ -99,7 +99,7 @@ class Superstructure(Subsystem):
             None, None, 
             LauncherSubsystem.SubsystemState.SCORE,
             HoodSubsystem.SubsystemState.AIMBOT,
-            TurretSubsystem.SubsystemState.OUTPOST,
+            None,
             True
         ),
 
@@ -107,7 +107,7 @@ class Superstructure(Subsystem):
             None, None, 
             LauncherSubsystem.SubsystemState.SCORE,
             HoodSubsystem.SubsystemState.AIMBOT,
-            TurretSubsystem.SubsystemState.DEPOT,
+            None,
             True
         ),
 
