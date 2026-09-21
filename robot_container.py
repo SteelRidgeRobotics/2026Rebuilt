@@ -297,7 +297,7 @@ class RobotContainer:
         NamedCommands.registerCommand(
             "Aim to Outpost",
             self.superstructure.set_goal_command(
-            Superstructure.Goal.AIMOUTPOST
+              Superstructure.Goal.AIMOUTPOST
             )
         )
         NamedCommands.registerCommand(
