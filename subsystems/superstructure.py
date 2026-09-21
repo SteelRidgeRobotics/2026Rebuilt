@@ -307,7 +307,6 @@ class Superstructure(Subsystem):
 
         
         ### goal: get the disired angle by using trig to find the angle between the current pose and the target pose
-        from constants import Constants
         is_red = DriverStation.getAlliance() == DriverStation.Alliance.kRed
         #is_red = False  # Initialize is_red to False to test blue alliance behavior
         depot_pose = Constants.GoalLocations.RED_DEPOT_PASS if is_red else Constants.GoalLocations.BLUE_DEPOT_PASS
