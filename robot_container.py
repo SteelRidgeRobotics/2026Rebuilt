@@ -39,12 +39,9 @@ from subsystems.launcher import (LauncherIOSim, LauncherIOTalonFX,
                                  LauncherSubsystem, LauncherIO)
 from subsystems.superstructure import Superstructure
 from subsystems.swerve import SwerveSubsystem
-from subsystems.turret import TurretSubsystem
-from subsystems.turret.io import TurretIOTalonFX, TurretIOSim, TurretIO
 from subsystems.vision import VisionSubsystem
 from subsystems.vision.io import VisionIOLimelight, VisionIO
-from util import make_turret_pose_supplier
-from pathplannerlib.controller import PPHolonomicDriveController
+
 
 # pylint: disable=too-many-instance-attributes
 class RobotContainer:
@@ -60,7 +57,6 @@ class RobotContainer:
             self._max_speed = LarryTunerConstants.speed_at_12_volts
 
         self._driver_controller = commands2.button.CommandXboxController(0)
-        self._function_controller = commands2.button.CommandXboxController(0)
 
         # Field2d for Elastic dashboard (robot position on field image)
         self._field = Field2d()
@@ -73,7 +69,6 @@ class RobotContainer:
         self.vision: Optional[VisionSubsystem] = None
         self.feeder: Optional[FeederSubsystem] = None
         self.launcher: Optional[LauncherSubsystem] = None
-        self.turret: Optional[TurretSubsystem] = None
         self.hood: Optional[HoodSubsystem] = None
 
         match Constants.CURRENT_MODE:
@@ -103,13 +98,6 @@ class RobotContainer:
 
                 # Hood, launcher, turret use turret position (robot center +
                 # offset) for distance/aim
-                if has_subsystem("turret"):
-                    turret_io = TurretIOTalonFX()
-                    self.turret = TurretSubsystem(
-                        turret_io,
-                        lambda: self.drivetrain.get_cached_state().pose
-                    )
-
                 # Create climber only if it exists on this robot
                 if has_subsystem("climber"):
                     # Create climber motor config
@@ -181,11 +169,7 @@ class RobotContainer:
 
                 # hood, turret, launcher use turret position (robot center +
                 # offset) for distance/aim
-                turret_pose_sim = make_turret_pose_supplier(
-                    lambda: self.drivetrain.get_cached_state().pose
-                )
-                self.hood = HoodSubsystem(HoodIOSim(), turret_pose_sim)
-                self.turret = TurretSubsystem(TurretIOSim(), turret_pose_sim)
+                self.hood = HoodSubsystem(HoodIOSim(), lambda: self.drivetrain.get_cached_state().pose) # TODO Run in sim to make sure it works
 
                 self.climber = ClimberSubsystem(ClimberIOSim())
 
@@ -195,19 +179,15 @@ class RobotContainer:
                 if has_subsystem("launcher"):
                     self.launcher = LauncherSubsystem(
                         LauncherIOSim(),
-                        turret_pose_sim
+                        lambda: self.drivetrain.get_cached_state().pose
                     )
 
                 if has_subsystem("intake"):
                     self.intake = IntakeSubsystem(IntakeIOSim())
 
-                if has_subsystem("turret"):
-                    turret_io = TurretIOSim()
-                    self.turret = TurretSubsystem(turret_io, turret_pose_sim)
-
                 if has_subsystem("hood"):
                     hood_io = HoodIOSim()
-                    self.hood = HoodSubsystem(hood_io, turret_pose_sim)
+                    self.hood = HoodSubsystem(hood_io, lambda: self.drivetrain.get_cached_state().pose)
 
             case Constants.Mode.REPLAY:
                 # Initialize all subsystems
@@ -216,15 +196,11 @@ class RobotContainer:
                     self.drivetrain.add_vision_measurement,
                     VisionIO()
                 )
-                turret_pose = make_turret_pose_supplier(
-                    lambda: self.drivetrain.get_cached_state().pose
-                )
-                self.hood = HoodSubsystem(HoodIO(), turret_pose)
-                self.turret = TurretSubsystem(TurretIO(), turret_pose)
+                self.hood = HoodSubsystem(HoodIO(), lambda: self.drivetrain.get_cached_state().pose)
                 self.climber = ClimberSubsystem(ClimberIO())
                 self.intake = IntakeSubsystem(IntakeIO())
                 self.feeder = FeederSubsystem(FeederIO())
-                self.launcher = LauncherSubsystem(LauncherIO(), turret_pose)
+                self.launcher = LauncherSubsystem(LauncherIO(), lambda: self.drivetrain.get_cached_state().pose)
 
         # Fuel simulation (for simulation testing)
         def get_field_speeds():
@@ -255,14 +231,9 @@ class RobotContainer:
             self.feeder,
             self.launcher,
             self.hood,
-            self.turret,
             drivetrain=self.drivetrain,
             aim_pose_supplier=(
-                make_turret_pose_supplier(
-                    lambda: self.drivetrain.get_cached_state().pose
-                )
-                if self.drivetrain is not None
-                else None
+                lambda: self.drivetrain.get_cached_state().pose if self.drivetrain is not None else None
             ),
             aiming_table=ShooterAimingTable(),
         )
@@ -467,9 +438,7 @@ class RobotContainer:
                 )
             )
 
-            Trigger(
-                lambda: self._driver_controller.getRightTriggerAxis() > 0.75
-            ).whileTrue(
+            self._driver_controller.rightBumper().whileTrue(
                 InstantCommand(
                     lambda: self.intake.set_desired_state(
                         self.intake.SubsystemState.OUTPUT
@@ -488,10 +457,10 @@ class RobotContainer:
                 "bind intake buttons"
             )
 
-        self._driver_controller.a().whileTrue(
+        self._driver_controller.povRight().whileTrue(
             self.drivetrain.apply_request(lambda: self._brake)
         )
-        self._driver_controller.x().whileTrue(
+        self._driver_controller.povLeft().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._point.with_module_direction(
                     Rotation2d(-hid.getLeftY(), -hid.getLeftX())
@@ -507,7 +476,7 @@ class RobotContainer:
 
         if self.launcher is not None:
             Trigger(
-                lambda: self._function_controller.getRightTriggerAxis() > 0.75
+                lambda: self._driver_controller.getRightTriggerAxis() > 0.75
             ).whileTrue(
                 self.superstructure.set_goal_command(
                     Superstructure.Goal.LAUNCH
@@ -518,14 +487,18 @@ class RobotContainer:
                 )
             )
             Trigger(
-                lambda: self._function_controller.getLeftTriggerAxis() > 0.75
+                lambda: self._driver_controller.getLeftTriggerAxis() > 0.75
             ).whileTrue(
-                self.launcher.set_desired_state_command(
-                    self.launcher.SubsystemState.SCORE
+                InstantCommand(
+                    lambda: self.intake.set_desired_state(
+                        self.intake.SubsystemState.INTAKE
+                    )
                 )
             ).onFalse(
-                self.launcher.set_desired_state_command(
-                    self.launcher.SubsystemState.IDLE
+                InstantCommand(
+                    lambda: self.intake.set_desired_state(
+                        self.intake.SubsystemState.STOP
+                    )
                 )
             )
 
@@ -535,7 +508,7 @@ class RobotContainer:
                 "bind launcher buttons"
             )
 
-        if self.turret is not None and self.hood is not None:
+        if self.hood is not None:
 
             self._driver_controller.y().onTrue(
                 self.superstructure.set_goal_command(
@@ -543,27 +516,24 @@ class RobotContainer:
                 )
             )
 
-            self._function_controller.x().onTrue(
+            self._driver_controller.x().onTrue(
                 self.superstructure.set_goal_command(
                     Superstructure.Goal.AIMDEPOT
                 )
             )
 
-            self._function_controller.b().onTrue(
+            self._driver_controller.b().onTrue(
                 self.superstructure.set_goal_command(
                     Superstructure.Goal.AIMOUTPOST
                 )
             )
 
-            self._function_controller.a().onTrue(
+            self._driver_controller.a().onTrue(
                 self.superstructure.set_goal_command(
                     Superstructure.Goal.DEFAULT
                 )
             )
 
-            self._function_controller.start().onTrue(
-                self.superstructure.override_checks()
-            )
 
         else:
             print(
@@ -576,12 +546,12 @@ class RobotContainer:
             
 
         if self.climber is not None:
-            self._function_controller.povUp().onTrue(
+            self._driver_controller.povUp().onTrue(
                 self.climber.set_desired_state_command(
                     self.climber.SubsystemState.EXTEND
                 )
             )
-            self._function_controller.povDown().onTrue(
+            self._driver_controller.povDown().onTrue(
                 self.climber.set_desired_state_command(
                     self.climber.SubsystemState.STOW
                 )
@@ -604,10 +574,6 @@ class RobotContainer:
         """Get the intake subsystem if it exists on this robot."""
         return self.intake
 
-    def get_turret(self) -> Optional[TurretSubsystem]:
-        """Get the turret subsystem if it exists on this robot."""
-        return self.turret
-
     def get_hood(self) -> Optional[HoodSubsystem]:
         """Get the hood subsystem if it exists on this robot."""
         return self.hood
@@ -620,30 +586,17 @@ class RobotContainer:
         """Check if intake subsystem exists on this robot."""
         return self.intake is not None
 
-    def has_turret(self) -> bool:
-        """Check if turret subsystem exists on this robot."""
-        return self.turret is not None
-
     def has_hood(self) -> bool:
         """Check if hood subsystem exists on this robot."""
         return self.hood is not None
 
     def get_component_poses(self) -> list[Pose3d]:
         """Gets component poses for AdvantageScope logging."""
-        if self.turret is not None:
-            turret_pose = self.turret.get_component_pose()
-
-            if self.hood is not None:
-                hood_pose = self.hood.get_component_pose(turret_pose)
-            else:
-                hood_pose = Pose3d()
-        else:
-            turret_pose = Pose3d()
-            hood_pose = Pose3d()
+        hood_pose = Pose3d() # TODO this position might be off due to turret being removed
 
         if self.climber is not None:
             climber_pose = self.climber.get_component_pose()
         else:
             climber_pose = Pose3d()
 
-        return [turret_pose, hood_pose, climber_pose]
+        return [hood_pose, climber_pose]

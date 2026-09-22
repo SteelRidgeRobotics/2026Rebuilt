@@ -53,7 +53,6 @@ class Dwayne(LoggedRobot):
         Logger.recordMetadata("HoodPresent", str(has_subsystem("hood")))
         Logger.recordMetadata("IntakePresent", str(has_subsystem("intake")))
         Logger.recordMetadata("LauncherPresent", str(has_subsystem("intake")))
-        Logger.recordMetadata("TurretPresent", str(has_subsystem("turret")))
         Logger.recordMetadata("VisionPresent", "True")
         Logger.recordMetadata("DrivetrainPresent", "True")
 

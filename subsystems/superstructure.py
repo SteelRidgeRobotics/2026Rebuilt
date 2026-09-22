@@ -16,8 +16,7 @@ from subsystems.feeder import FeederSubsystem
 from subsystems.hood import HoodSubsystem
 from subsystems.intake import IntakeSubsystem
 from subsystems.launcher import LauncherSubsystem
-from subsystems.turret import TurretSubsystem
-from wpimath.geometry import Pose2d, Rotation2d, Translation2d
+
 if TYPE_CHECKING:
     from subsystems.swerve import SwerveSubsystem
 
@@ -50,7 +49,6 @@ class Superstructure(Subsystem):
         Optional[FeederSubsystem.SubsystemState],
         Optional[LauncherSubsystem.SubsystemState],
         Optional[HoodSubsystem.SubsystemState],
-        Optional[TurretSubsystem.SubsystemState],
         bool,
         # Superstructure state? (Is it handled by periodic or just a single
         # action?)
@@ -61,7 +59,6 @@ class Superstructure(Subsystem):
             FeederSubsystem.SubsystemState.STOP,
             LauncherSubsystem.SubsystemState.IDLE,
             HoodSubsystem.SubsystemState.STOW,
-            None, #TurretSubsystem.SubsystemState.HUB,
             True
         ),
 
@@ -70,28 +67,27 @@ class Superstructure(Subsystem):
             FeederSubsystem.SubsystemState.STOP,
             LauncherSubsystem.SubsystemState.IDLE,
             HoodSubsystem.SubsystemState.STOW,
-            None, True
+            True
         ),
 
         Goal.LAUNCH: (
             None,#IntakeSubsystem.SubsystemState.INTAKE,
             FeederSubsystem.SubsystemState.INWARD,
             None,
-            None, None, True
+            None, True
         ),
 
         Goal.STOPLAUNCH: (
             None,#IntakeSubsystem.SubsystemState.STOP,
             FeederSubsystem.SubsystemState.STOP,
             None,
-            None, None, True
+            None, True
         ),
 
         Goal.AIMHUB: (
             None, None, 
             LauncherSubsystem.SubsystemState.SCORE,
             HoodSubsystem.SubsystemState.AIMBOT,
-            None,
             True  # track so aiming block runs and DistanceToHub is updated
         ),
 
@@ -99,7 +95,6 @@ class Superstructure(Subsystem):
             None, None, 
             LauncherSubsystem.SubsystemState.SCORE,
             HoodSubsystem.SubsystemState.AIMBOT,
-            None,
             True
         ),
 
@@ -107,7 +102,6 @@ class Superstructure(Subsystem):
             None, None, 
             LauncherSubsystem.SubsystemState.SCORE,
             HoodSubsystem.SubsystemState.AIMBOT,
-            None,
             True
         ),
 
@@ -119,7 +113,6 @@ class Superstructure(Subsystem):
                  feeder: Optional[FeederSubsystem] = None,
                  launcher: Optional[LauncherSubsystem] = None,
                  hood: Optional[HoodSubsystem] = None,
-                 turret: Optional[TurretSubsystem] = None,
                  drivetrain: Optional["SwerveSubsystem"] = None,
                  aim_pose_supplier: Optional[Callable[[], Pose2d]] = None,
                  aiming_table: Optional[ShooterAimingTable] = None,
@@ -137,7 +130,6 @@ class Superstructure(Subsystem):
         self.feeder = feeder
         self.launcher = launcher
         self.hood = hood
-        self.turret = turret
         self._drivetrain = drivetrain
         self._aim_pose_supplier = aim_pose_supplier
         self._aiming_table = aiming_table or ShooterAimingTable()
@@ -145,7 +137,6 @@ class Superstructure(Subsystem):
         self._goal_state = self.Goal.DEFAULT
         self.set_goal_command(self._goal_state)
 
-        self._turret_check = False
         self._hood_check = False
         self._flywheel_check = False
         self._distance_to_hub = 0.0
@@ -177,22 +168,17 @@ class Superstructure(Subsystem):
             )
             self._virtual_distance_m = self._distance_to_hub
             settings = self._aiming_table.get_settings(self._distance_to_hub)
-            if self.turret is not None:
-                self.turret.set_target_field_angle(None)  # aim at real goal
             if self.hood is not None:
                 self.hood.set_aiming_setpoint(settings["hood"])
             if self.launcher is not None:
                 self.launcher.set_aiming_setpoint(settings["rpm"])
         elif self._goal_state not in (self.Goal.LAUNCH, self.Goal.STOPLAUNCH):
             # Not aiming and not holding launch: clear setpoints (e.g. DEFAULT, INTAKE)
-            if self.turret is not None:
-                self.turret.set_target_field_angle(None)
             if self.hood is not None:
                 self.hood.set_aiming_setpoint(None)
             if self.launcher is not None:
                 self.launcher.set_aiming_setpoint(None)
 
-        self._turret_check = self._heading_on_target()
         self._hood_check = (
             abs(
                 self.hood.inputs.hood_setpoint - self.hood.inputs.hood_position
@@ -225,8 +211,7 @@ class Superstructure(Subsystem):
             case self.Goal.LAUNCH:
                 if (
                         (
-                                self._turret_check
-                                and self._hood_check
+                                self._hood_check
                                 and self._flywheel_check
                         ) or self._checks_override):
                     self.feeder.unlock()
@@ -243,7 +228,6 @@ class Superstructure(Subsystem):
                 pass  # aiming block above handles setpoints; no feeder logic
 
         Logger.recordOutput("Superstructure/Goal State", self._goal_state.name)
-        Logger.recordOutput("Superstructure/Turret Check", self._turret_check)
         Logger.recordOutput("Superstructure/Hood Check", self._hood_check)
         Logger.recordOutput(
             "Superstructure/Flywheel Check",
@@ -350,9 +334,9 @@ class Superstructure(Subsystem):
 
     def _set_goal(self, goal: Goal) -> None:
         (intake_state, feeder_state, launcher_state, hood_state,
-         turret_state, superstructure_state) = self._goal_to_states.get(
+        superstructure_state) = self._goal_to_states.get(
             goal,
-            (None, None, None, None, None, False)
+            (None, None, None, None, False)
         )
 
         if not intake_state is None:
@@ -366,9 +350,6 @@ class Superstructure(Subsystem):
         
         if not hood_state is None:
             self.hood.set_desired_state(hood_state)
-
-        if not turret_state is None:
-            self.turret.set_desired_state(turret_state)
 
         if superstructure_state:
             self._goal_state = goal
