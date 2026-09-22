@@ -25,6 +25,7 @@ from generated.larry.tuner_constants import (TunerConstants as
 from generated.tuner_constants import TunerConstants
 from lib.fuel_sim import FuelSim
 from robot_config import currentRobot, has_subsystem, Robot
+from subsystems import superstructure
 from subsystems.aiming import ShooterAimingTable
 from subsystems.climber import ClimberSubsystem
 from subsystems.climber.io import ClimberIOTalonFX, ClimberIOSim, ClimberIO
@@ -267,7 +268,7 @@ class RobotContainer:
         NamedCommands.registerCommand(
             "Aim to Outpost",
             self.superstructure.set_goal_command(
-                Superstructure.Goal.AIMOUTPOST
+              Superstructure.Goal.AIMOUTPOST
             )
         )
         NamedCommands.registerCommand(
@@ -313,6 +314,11 @@ class RobotContainer:
 
         self._auto_chooser.onChange(self.set_robot_pose)
 
+
+        PPHolonomicDriveController.setRotationTargetOverride(
+            self._auto_aim_heading_override
+        )
+
     def _setup_swerve_requests(self):
         self._field_centric = (
             swerve.requests.FieldCentric()
@@ -337,24 +343,73 @@ class RobotContainer:
                 swerve.SwerveModule.SteerRequestType.POSITION
             )
         )
+        self._field_centric_facing_angle = (
+            swerve.requests.FieldCentricFacingAngle()
+            .with_deadband(self._max_speed * 0.01)
+            .with_rotational_deadband(self._max_angular_rate * 0.02)
+            .with_drive_request_type(
+                swerve.SwerveModule.DriveRequestType.OPEN_LOOP_VOLTAGE
+            )
+            .with_steer_request_type(
+                swerve.SwerveModule.SteerRequestType.POSITION
+            )
+            .with_heading_pid(
+                Constants.AutoAlignConstants.HEADING_KP,
+                Constants.AutoAlignConstants.HEADING_KI,
+                Constants.AutoAlignConstants.HEADING_KD,
+            )
+            .with_max_abs_rotational_rate(self._max_angular_rate)
+        )
+        
 
         self._brake = swerve.requests.SwerveDriveBrake()
         self._point = swerve.requests.PointWheelsAt()
 
+
+    def _aim_field_heading(self) -> Optional[Rotation2d]:
+        """Field heading to face while aiming, or None when driver controls yaw."""
+        if not self.superstructure.is_chassis_aiming():
+            return None
+        if not self.superstructure._heading_on_target():
+            return self.superstructure.get_target_pose(self.drivetrain.get_cached_state().pose)
+        return None
+
+    def _auto_aim_heading_override(self) -> Optional[Rotation2d]:
+        """PathPlanner rotation override so autos face the goal while aiming."""
+        return self._aim_field_heading()
+
+    def _teleop_drive_request(self, hid) -> swerve.requests.SwerveRequest:
+        """Field-centric drive; lock heading to the goal while aiming."""
+        velocity_x = -hid.getLeftY() * self._max_speed
+        velocity_y = -hid.getLeftX() * self._max_speed
+        heading = self._aim_field_heading()
+        if heading is not None:
+            # FieldCentricFacingAngle with operator perspective rotates the
+            # target by alliance forward, so convert field heading first.
+            operator_forward =  self.drivetrain.get_operator_forward_direction()
+            return (
+                self._field_centric_facing_angle
+                .with_velocity_x(velocity_x)
+                .with_velocity_y(velocity_y)
+                .with_target_direction(heading)
+
+                )
+            
+        return (
+            self._field_centric
+            .with_velocity_x(velocity_x)
+            .with_velocity_y(velocity_y)
+            .with_rotational_rate(
+                -self._driver_controller.getRightX() * self._max_angular_rate
+            )
+        )
+
     def _setup_controller_bindings(self) -> None:
         hid = self._driver_controller.getHID()
 
-        self.drivetrain.setDefaultCommand(
-            self.drivetrain.apply_request(
-                lambda: self._field_centric
-                .with_velocity_x(-hid.getLeftY() * self._max_speed)
-                .with_velocity_y(-hid.getLeftX() * self._max_speed)
-                .with_rotational_rate(
-                    -self._driver_controller.getRightX() *
-                    self._max_angular_rate
-                )
-            )
-        )
+        self.drivetrain.setDefaultCommand(self.drivetrain.apply_request(lambda: self._teleop_drive_request(hid)))
+        
+        
 
         self._driver_controller.leftBumper().whileTrue(
             self.drivetrain.apply_request(
@@ -485,6 +540,10 @@ class RobotContainer:
                 "Turret or hood subsystem not available on this robot, "
                 "unable to bind turret buttons"
             )
+
+            
+            
+            
 
         if self.climber is not None:
             self._driver_controller.povUp().onTrue(

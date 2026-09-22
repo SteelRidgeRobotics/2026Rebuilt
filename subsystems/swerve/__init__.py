@@ -16,7 +16,7 @@ from phoenix6 import SignalLogger, swerve, units, utils
 from phoenix6.phoenix_native import (SwerveDriveState_t, SwerveModuleState_t,
                                      SwerveModulePosition_t, Native)
 from phoenix6.swerve import SwerveModuleState
-from phoenix6.swerve.requests import ApplyRobotSpeeds
+from phoenix6.swerve.requests import ApplyRobotSpeeds, FieldCentricFacingAngle
 from pykit.autolog import autologgable_output, autolog_output, autolog
 from pykit.logger import Logger
 from wpilib import DriverStation, Notifier, RobotController
@@ -24,9 +24,13 @@ from wpilib.sysid import SysIdRoutineLog
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds
 from wpiutil.wpistruct import make_wpistruct
+from phoenix6.swerve.utility.phoenix_pid_controller import PhoenixPIDController
+
+
 
 # Robot config
 from robot_config import currentRobot, Robot
+from subsystems import superstructure
 
 if currentRobot == Robot.LARRY:
     from generated.larry.tuner_constants import TunerSwerveDrivetrain
@@ -285,6 +289,12 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
         if utils.is_simulation():
             self._start_sim_thread()
 
+
+        ### variables for auto align
+        self.translation_controller = PhoenixPIDController(0.0, 0.0, 0.0)
+        self._field_centric_facing_angle = FieldCentricFacingAngle()
+        self.heading_controller = self._field_centric_facing_angle.heading_controller
+
     def apply_request(
         self, request: Callable[[], swerve.requests.SwerveRequest]
     ) -> Command:
@@ -441,3 +451,5 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
             self,
             utils.fpga_to_current_time(timestamp)
         )
+
+   
