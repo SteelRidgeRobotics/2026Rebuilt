@@ -7,6 +7,7 @@ from commands2 import Command, Subsystem, cmd
 from pathplannerlib.auto import AutoBuilder
 from pykit.logger import Logger
 from wpilib import DriverStation, Timer
+import wpimath
 from wpimath.geometry import Pose2d
 
 from constants import Constants
@@ -16,7 +17,7 @@ from subsystems.hood import HoodSubsystem
 from subsystems.intake import IntakeSubsystem
 from subsystems.launcher import LauncherSubsystem
 from subsystems.turret import TurretSubsystem
-
+from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 if TYPE_CHECKING:
     from subsystems.swerve import SwerveSubsystem
 
@@ -40,7 +41,7 @@ class Superstructure(Subsystem):
         AIMOUTPOST = auto()  # Point turret to the outpost side
         AIMDEPOT = auto()  # Point turret to the depot side
         STOPLAUNCH = auto()  # Stop the launcher
-        # center
+        
 
     # Map each goal to each subsystem state to reduce code complexity
     _goal_to_states: dict[Goal,
@@ -90,7 +91,7 @@ class Superstructure(Subsystem):
             None, None, 
             LauncherSubsystem.SubsystemState.SCORE,
             HoodSubsystem.SubsystemState.AIMBOT,
-            TurretSubsystem.SubsystemState.HUB,
+            None,
             True  # track so aiming block runs and DistanceToHub is updated
         ),
 
@@ -98,7 +99,7 @@ class Superstructure(Subsystem):
             None, None, 
             LauncherSubsystem.SubsystemState.SCORE,
             HoodSubsystem.SubsystemState.AIMBOT,
-            TurretSubsystem.SubsystemState.OUTPOST,
+            None,
             True
         ),
 
@@ -106,7 +107,7 @@ class Superstructure(Subsystem):
             None, None, 
             LauncherSubsystem.SubsystemState.SCORE,
             HoodSubsystem.SubsystemState.AIMBOT,
-            TurretSubsystem.SubsystemState.DEPOT,
+            None,
             True
         ),
 
@@ -131,7 +132,7 @@ class Superstructure(Subsystem):
         Virtual Goal aiming for LAUNCH and AIMHUB goals.
         """
         super().__init__()
-
+        self.auto_goal = None
         self.intake = intake
         self.feeder = feeder
         self.launcher = launcher
@@ -191,13 +192,7 @@ class Superstructure(Subsystem):
             if self.launcher is not None:
                 self.launcher.set_aiming_setpoint(None)
 
-        self._turret_check = (
-            abs(
-                self.turret.inputs.turret_setpoint -
-                self.turret.inputs.turret_position
-            ) < Constants.TurretConstants.SETPOINT_TOLERANCE
-            if self.turret is not None else True
-        )
+        self._turret_check = self._heading_on_target()
         self._hood_check = (
             abs(
                 self.hood.inputs.hood_setpoint - self.hood.inputs.hood_position
@@ -281,6 +276,77 @@ class Superstructure(Subsystem):
             return (Constants.GoalLocations.RED_DEPOT_PASS
                     if is_red else Constants.GoalLocations.BLUE_DEPOT_PASS)
         return Constants.GoalLocations.BLUE_HUB  # fallback
+
+    def is_chassis_aiming(self) -> bool:
+        """True when the drivetrain should hold heading at the current goal."""
+        return self._goal_state in (
+            self.Goal.AIMHUB,
+            self.Goal.AIMOUTPOST,
+            self.Goal.AIMDEPOT,
+            self.Goal.LAUNCH
+        )
+    
+    def _auto_align_goal(self):
+        # so when we launch fuel we can still move and auto align
+        if self.is_chassis_aiming():
+            match self._get_goal():
+                case self.Goal.AIMDEPOT:
+                    self.auto_goal = "depot"
+                case self.Goal.AIMOUTPOST:
+                    self.auto_goal = "outpost"
+                case self.Goal.AIMHUB:
+                    self.auto_goal = "hub"
+                case _:
+                    self.auto_goal = self.auto_goal
+        else:
+            self.auto_goal = "N/A"
+        return self.auto_goal
+
+
+    def get_target_pose(self, current_pose: Pose2d) -> Pose2d:
+
+        
+        ### goal: get the disired angle by using trig to find the angle between the current pose and the target pose
+        is_red = DriverStation.getAlliance() == DriverStation.Alliance.kRed
+        #is_red = False  # Initialize is_red to False to test blue alliance behavior
+        depot_pose = Constants.GoalLocations.RED_DEPOT_PASS if is_red else Constants.GoalLocations.BLUE_DEPOT_PASS
+        hub_pose = Constants.GoalLocations.RED_HUB if is_red else Constants.GoalLocations.BLUE_HUB
+        outpost_pose = Constants.GoalLocations.RED_OUTPOST_PASS if is_red else Constants.GoalLocations.BLUE_OUTPOST_PASS
+        robo_y = current_pose.Y()
+        robo_x = current_pose.X()
+
+        goal = Superstructure._auto_align_goal(self)
+        # While in sim for some reason adding math.pi to new_angle makes it face the wrong way
+        match goal:
+            case "hub":
+                new_angle = math.atan2(hub_pose.Y() - robo_y, hub_pose.X() - robo_x) 
+            case "outpost":
+                new_angle = math.atan2(outpost_pose.Y() - robo_y, outpost_pose.X() - robo_x) 
+            case "depot":
+                new_angle = math.atan2(depot_pose.Y() - robo_y, depot_pose.X() - robo_x) 
+            case _:
+                new_angle = current_pose.rotation().radians()
+        return Rotation2d(new_angle)
+
+    def _heading_on_target(self) -> bool:
+        """True when chassis heading matches the aim target (or no aim)."""
+        
+        if self.turret is None or self._drivetrain is None:
+            return True
+        if not self.is_chassis_aiming():
+            return True
+        current = self._drivetrain.get_cached_state().pose.rotation()
+        target = self.get_target_pose(self._drivetrain.get_cached_state().pose)
+        error_rad = abs((target - current).radians())
+        Logger.recordOutput("swerve/TargetHeading", target.radians())
+        Logger.recordOutput("Superstructure/HeadingErrorRad", error_rad)
+        
+        return error_rad <= Constants.AutoAlignConstants.HEADING_TOLERANCE_RADIANS
+    
+    def _get_goal(self) -> "Superstructure.Goal":
+        
+        return self._goal_state
+
 
     def _set_goal(self, goal: Goal) -> None:
         (intake_state, feeder_state, launcher_state, hood_state,

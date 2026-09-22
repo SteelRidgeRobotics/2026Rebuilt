@@ -1,6 +1,7 @@
 """Constants for everything"""
 #pylint: disable=too-few-public-methods, missing-class-docstring
 from enum import Enum, auto
+import math
 from typing import Final
 
 from phoenix6.configs.config_groups import Slot0Configs, Slot1Configs
@@ -172,6 +173,13 @@ class Constants:
         # Only switch to other side of center when goal is at least this
         # many degrees past middle
         CROSS_MIDDLE_HYSTERESIS_DEGREES = 2.0
+        HEADING_TOLERANCE_RADIANS = math.radians(3.0)
+
+    class AutoAlignConstants:
+        HEADING_KP = 9
+        HEADING_KI = 0.0
+        HEADING_KD = .1
+        HEADING_TOLERANCE_RADIANS = math.radians(3.0)
 
     class HoodConstants:
         GEAR_RATIO = 15.5555 # old 68 / 3
@@ -218,7 +226,6 @@ class Constants:
 # Initialize robot-specific hardware configurations
 def _init_hardware_configs():
     """Initialize hardware configurations based on detected robot."""
-
     match currentRobot:
         case Robot.LARRY:
             # Climber
@@ -237,7 +244,6 @@ def _init_hardware_configs():
             # as needed
             Constants.ClimberConstants.SUPPLY_CURRENT = 30.0
             Constants.ClimberConstants.MOMENT_OF_INERTIA = 0.3
-
         case _:  # COMP or UNKNOWN defaults to COMP
             # Climber
             Constants.ClimberConstants.GEAR_RATIO = 61504.0 / 189  # Same or
@@ -302,7 +308,7 @@ def _init_hardware_configs():
             Constants.FeederConstants.SUPPLY_CURRENT = 30.0  # Amperes
             Constants.FeederConstants.MOMENT_OF_INERTIA = 0.0067
             #Constants.FeederConstants.FEED_FORWARD = 3.0
-
-
 # Initialize hardware configs at module load time
 _init_hardware_configs()
+
+
