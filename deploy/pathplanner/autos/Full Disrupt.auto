@@ -36,12 +36,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "Aim to Outpost"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Align 2nd Pass"

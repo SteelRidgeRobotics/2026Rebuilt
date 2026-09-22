@@ -48,7 +48,7 @@
   "folder": "Circle 1",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 92.18575059913954
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }
