@@ -7,6 +7,7 @@ import commands2.button
 from commands2 import cmd, InstantCommand
 from commands2.button import Trigger
 from pathplannerlib.auto import NamedCommands, AutoBuilder, PathPlannerAuto
+from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.util import FlippingUtil
 from phoenix6 import swerve
 from phoenix6.configs import TalonFXConfiguration
@@ -342,6 +343,10 @@ class RobotContainer:
 
         self._auto_chooser.onChange(self.set_robot_pose)
 
+        PPHolonomicDriveController.setRotationTargetOverride(
+            self._auto_aim_heading_override
+        )
+
     def _setup_swerve_requests(self):
         self._field_centric = (
             swerve.requests.FieldCentric()
@@ -353,6 +358,24 @@ class RobotContainer:
             .with_steer_request_type(
                 swerve.SwerveModule.SteerRequestType.POSITION
             )
+        )
+
+        self._field_centric_facing_angle = (
+            swerve.requests.FieldCentricFacingAngle()
+            .with_deadband(0)
+            .with_rotational_deadband(0)
+            .with_drive_request_type(
+                swerve.SwerveModule.DriveRequestType.OPEN_LOOP_VOLTAGE
+            )
+            .with_steer_request_type(
+                swerve.SwerveModule.SteerRequestType.POSITION
+            )
+            .with_heading_pid(
+                Constants.TurretConstants.HEADING_KP,
+                Constants.TurretConstants.HEADING_KI,
+                Constants.TurretConstants.HEADING_KD,
+            )
+            .with_max_abs_rotational_rate(self._max_angular_rate)
         )
 
         self._robot_centric: swerve.requests.RobotCentric = (
@@ -370,19 +393,49 @@ class RobotContainer:
         self._brake = swerve.requests.SwerveDriveBrake()
         self._point = swerve.requests.PointWheelsAt()
 
+    def _aim_field_heading(self) -> Optional[Rotation2d]:
+        """Field heading to face while aiming, or None when driver controls yaw."""
+        if self.turret is None or not self.superstructure.is_chassis_aiming():
+            return None
+        if self.turret.get_current_state() == TurretSubsystem.SubsystemState.MANUAL:
+            return None
+        return self.turret.get_aim_field_heading()
+
+    def _auto_aim_heading_override(self) -> Optional[Rotation2d]:
+        """PathPlanner rotation override so autos face the goal while aiming."""
+        return self._aim_field_heading()
+
+    def _teleop_drive_request(self, hid) -> swerve.requests.SwerveRequest:
+        """Field-centric drive; lock heading to the goal while aiming."""
+        velocity_x = -hid.getLeftY() * self._max_speed
+        velocity_y = -hid.getLeftX() * self._max_speed
+        heading = self._aim_field_heading()
+        if heading is not None:
+            # FieldCentricFacingAngle with operator perspective rotates the
+            # target by alliance forward, so convert field heading first.
+            operator_forward = self.drivetrain.get_operator_forward_direction()
+            return (
+                self._field_centric_facing_angle
+                .with_velocity_x(velocity_x)
+                .with_velocity_y(velocity_y)
+                .with_target_direction(
+                    heading.rotateBy(-operator_forward)
+                )
+            )
+        return (
+            self._field_centric
+            .with_velocity_x(velocity_x)
+            .with_velocity_y(velocity_y)
+            .with_rotational_rate(
+                -self._driver_controller.getRightX() * self._max_angular_rate
+            )
+        )
+
     def _setup_controller_bindings(self) -> None:
         hid = self._driver_controller.getHID()
 
         self.drivetrain.setDefaultCommand(
-            self.drivetrain.apply_request(
-                lambda: self._field_centric
-                .with_velocity_x(-hid.getLeftY() * self._max_speed)
-                .with_velocity_y(-hid.getLeftX() * self._max_speed)
-                .with_rotational_rate(
-                    -self._driver_controller.getRightX() *
-                    self._max_angular_rate
-                )
-            )
+            self.drivetrain.apply_request(lambda: self._teleop_drive_request(hid))
         )
 
         self._driver_controller.leftBumper().whileTrue(

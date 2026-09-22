@@ -36,9 +36,9 @@ class Superstructure(Subsystem):
         DEFAULT = auto()  # Default goal
         INTAKE = auto()  # Intake fuel from the floor.
         LAUNCH = auto()  # Scoring fuel into the hub
-        AIMHUB = auto()  # Point turret to hub
-        AIMOUTPOST = auto()  # Point turret to the outpost side
-        AIMDEPOT = auto()  # Point turret to the depot side
+        AIMHUB = auto()  # Face chassis toward hub
+        AIMOUTPOST = auto()  # Face chassis toward the outpost
+        AIMDEPOT = auto()  # Face chassis toward the depot
         STOPLAUNCH = auto()  # Stop the launcher
         # center
 
@@ -191,13 +191,7 @@ class Superstructure(Subsystem):
             if self.launcher is not None:
                 self.launcher.set_aiming_setpoint(None)
 
-        self._turret_check = (
-            abs(
-                self.turret.inputs.turret_setpoint -
-                self.turret.inputs.turret_position
-            ) < Constants.TurretConstants.SETPOINT_TOLERANCE
-            if self.turret is not None else True
-        )
+        self._turret_check = self._heading_on_target()
         self._hood_check = (
             abs(
                 self.hood.inputs.hood_setpoint - self.hood.inputs.hood_position
@@ -281,6 +275,27 @@ class Superstructure(Subsystem):
             return (Constants.GoalLocations.RED_DEPOT_PASS
                     if is_red else Constants.GoalLocations.BLUE_DEPOT_PASS)
         return Constants.GoalLocations.BLUE_HUB  # fallback
+
+    def is_chassis_aiming(self) -> bool:
+        """True when the drivetrain should hold heading at the current goal."""
+        return self._goal_state in (
+            self.Goal.AIMHUB,
+            self.Goal.AIMOUTPOST,
+            self.Goal.AIMDEPOT,
+            self.Goal.LAUNCH,
+        )
+
+    def _heading_on_target(self) -> bool:
+        """True when chassis heading matches the aim target (or no aim)."""
+        if self.turret is None or self._drivetrain is None:
+            return True
+        if not self.is_chassis_aiming():
+            return True
+        current = self._drivetrain.get_cached_state().pose.rotation()
+        target = self.turret.get_aim_field_heading()
+        error_rad = abs((target - current).radians())
+        Logger.recordOutput("Superstructure/HeadingErrorRad", error_rad)
+        return error_rad < Constants.TurretConstants.HEADING_TOLERANCE_RADIANS
 
     def _set_goal(self, goal: Goal) -> None:
         (intake_state, feeder_state, launcher_state, hood_state,

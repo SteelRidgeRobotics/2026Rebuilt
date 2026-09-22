@@ -1,5 +1,6 @@
 """Constants for everything"""
 #pylint: disable=too-few-public-methods, missing-class-docstring
+import math
 from enum import Enum, auto
 from typing import Final
 
@@ -169,6 +170,11 @@ class Constants:
         SETPOINT_TOLERANCE = 0.167
         MM_VELOCITY = 1
         MM_ACCELERATION = 20
+        # Chassis heading PID (rad -> rad/s) now aims instead of turret yaw
+        HEADING_KP = 6.0
+        HEADING_KI = 0.0
+        HEADING_KD = 0.0
+        HEADING_TOLERANCE_RADIANS = math.radians(3.0)
         # Only switch to other side of center when goal is at least this
         # many degrees past middle
         CROSS_MIDDLE_HYSTERESIS_DEGREES = 2.0

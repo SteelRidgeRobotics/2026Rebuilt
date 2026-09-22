@@ -1,12 +1,11 @@
 """Logic abstraction for Turret IO layers"""
 from enum import IntEnum, auto
-from math import atan2, pi, radians as deg_to_rad
+from math import atan2
 from typing import Final, Callable, Optional
 
 from pykit.logger import Logger
 from wpilib import Alert, DriverStation
 from wpimath.geometry import Pose2d, Rotation2d, Pose3d, Rotation3d
-from wpimath.units import rotationsToRadians
 
 from constants import Constants
 from subsystems import StateSubsystem
@@ -15,7 +14,13 @@ from subsystems.turret.io import TurretIO
 
 #pylint: disable=too-many-instance-attributes
 class TurretSubsystem(StateSubsystem):
-    """Controls input processing for turret logic."""
+    """
+    Shooter yaw is mechanically fixed to the chassis.
+
+    This subsystem still tracks which field goal to face (hub / depot /
+    outpost) and holds the turret motor at home. Chassis heading does the
+    aiming.
+    """
 
     class SubsystemState(IntEnum):
         """All turret states"""
@@ -24,13 +29,7 @@ class TurretSubsystem(StateSubsystem):
         DEPOT = auto()
         OUTPOST = auto()
 
-    _state_configs: dict[SubsystemState, bool] = {
-        SubsystemState.HUB: True,
-        SubsystemState.DEPOT: True,
-        SubsystemState.OUTPOST: True,
-        SubsystemState.MANUAL: False
-
-    }
+    _FIXED_POSITION_RAD: Final[float] = 0.0
 
     def __init__(self,
                  io: TurretIO,
@@ -48,8 +47,6 @@ class TurretSubsystem(StateSubsystem):
             Alert.AlertType.kError
         )
 
-        self.independent_rotation = Rotation2d(0)
-        self.current_radians = 0.0
         self.target_radians = 0.0
         self._target_field_angle: Optional[
             float] = None  # SOTM virtual goal angle (rad), None = use real
@@ -59,8 +56,7 @@ class TurretSubsystem(StateSubsystem):
         self.y = 4.1
 
     def set_target_field_angle(self, angle_rad: Optional[float]) -> None:
-        """Set field-frame aim angle (rad). When None, turret uses real
-        goal. Used for SOTM virtual goal."""
+        """Set field-frame aim angle (rad). When None, uses the real goal."""
         self._target_field_angle = angle_rad
 
     def periodic(self):
@@ -70,21 +66,17 @@ class TurretSubsystem(StateSubsystem):
 
         # Log inputs to PyKit
         Logger.processInputs("Turret", self.inputs)
-        # Logger.recordOutput("Turret/X Distance", self.x)
-        # Logger.recordOutput("Turret/Y Distance", self.y)
-        # Logger.recordOutput("Turret/Robot Current Radians",
-        # self.current_radians)
         Logger.recordOutput("Turret/Target Radians", self.target_radians)
 
         # Update alerts
         self.turret_disconnected_alert.set(not self.inputs.turret_connected)
 
-        self.current_radians = self.robot_pose_supplier().rotation(
-
-        ).radians() + self.independent_rotation.radians()
+        # Mechanism is fixed; keep the motor at home.
+        self._io.set_position(self._FIXED_POSITION_RAD)
 
         if self.get_current_state() != self.SubsystemState.MANUAL:
-            self.rotate_to_goal(self.get_current_state())
+            heading = self.get_aim_field_heading()
+            self.target_radians = heading.radians()
 
         super().periodic()
 
@@ -110,6 +102,12 @@ class TurretSubsystem(StateSubsystem):
             return 0.0
         return atan2(dy, dx)
 
+    def get_aim_field_heading(self) -> Rotation2d:
+        """Robot heading that points the fixed shooter at the current goal."""
+        if self._target_field_angle is not None:
+            return Rotation2d(self._target_field_angle)
+        return Rotation2d(self.get_radians_to_goal())
+
     def _goal_pose_for_state(self, state: SubsystemState) -> Pose2d:
         """Goal pose for the given state and current alliance."""
         is_blue = DriverStation.getAlliance() == DriverStation.Alliance.kBlue
@@ -127,75 +125,6 @@ class TurretSubsystem(StateSubsystem):
                 return Constants.GoalLocations.BLUE_HUB  # fallback, caller
                 # should not use for MANUAL
 
-    def rotate_to_goal(self, target: SubsystemState):
-        """
-        Aim turret at goal. Respects hard stop range [MIN_ROTATIONS, MAX_ROTATIONS]
-        and uses 5° hysteresis past center before switching sides.
-        """
-        self.set_desired_state(target)
-        if self.get_current_state() == self.SubsystemState.MANUAL:
-            return
-
-        # Field angle to goal (use virtual goal angle for SOTM when set,
-        # else real goal)
-        field_angle_to_goal = (
-            self._target_field_angle
-            if self._target_field_angle is not None
-            else self.get_radians_to_goal()
-        )
-        robot_rotation = self.robot_pose_supplier().rotation().radians()
-
-        # Turret angle relative to robot forward. Turret motor is
-        # CLOCKWISE_POSITIVE, field is CCW positive.
-        desired_turret = -(field_angle_to_goal - robot_rotation)
-        while desired_turret > pi:
-            desired_turret -= 2 * pi
-        while desired_turret < -pi:
-            desired_turret += 2 * pi
-
-        # Physical range: [min_radians, max_radians]. Map desired angle into
-        # this range (wrap as needed), then clamp.
-        min_radians = rotationsToRadians(
-            Constants.TurretConstants.MIN_ROTATIONS
-        )
-        max_radians = rotationsToRadians(
-            Constants.TurretConstants.MAX_ROTATIONS
-        )
-        desired_in_range = desired_turret
-        while desired_in_range < min_radians:
-            desired_in_range += 2 * pi
-        while desired_in_range > max_radians:
-            desired_in_range -= 2 * pi
-        desired_in_range = max(min_radians, min(max_radians, desired_in_range))
-
-        current_turret = rotationsToRadians(self.inputs.turret_position)
-        middle = (min_radians + max_radians) / 2
-        hysteresis_rad = deg_to_rad(
-            Constants.TurretConstants.CROSS_MIDDLE_HYSTERESIS_DEGREES
-        )
-
-        # Only switch to the other side of center if goal is at least 5°
-        # past the middle
-        on_left = current_turret < middle
-        goal_on_right = desired_in_range > middle
-        goal_on_left = desired_in_range < middle
-
-        if on_left and goal_on_right:
-            if desired_in_range < middle + hysteresis_rad:
-                command_turret = current_turret  # hold, don't cross yet
-            else:
-                command_turret = desired_in_range
-        elif not on_left and goal_on_left:
-            if desired_in_range > middle - hysteresis_rad:
-                command_turret = current_turret  # hold, don't cross yet
-            else:
-                command_turret = desired_in_range
-        else:
-            command_turret = desired_in_range
-
-        self.target_radians = field_angle_to_goal
-        self._io.set_position(command_turret)
-
     def get_current_state(self) -> SubsystemState | None:
         """get state"""
         return super().get_current_state()
@@ -204,13 +133,7 @@ class TurretSubsystem(StateSubsystem):
         """set state"""
         if not super().set_desired_state(desired_state):
             return
-
-        auto_aim = self._state_configs.get(desired_state, False)
-
-        if auto_aim:
-            self.rotate_to_goal(desired_state)
-        else:
-            self._io.set_position(self.inputs.turret_position)
+        self._io.set_position(self._FIXED_POSITION_RAD)
 
     def get_component_pose(self) -> Pose3d:
         """Gets the articulated component pose for AdvantageScope."""
@@ -218,5 +141,5 @@ class TurretSubsystem(StateSubsystem):
             -0.1524,
             0,
             0,
-            Rotation3d(0, 0, self.inputs.turret_position)
+            Rotation3d(0, 0, 0)
         )
