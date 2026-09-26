@@ -428,20 +428,6 @@ class RobotContainer:
             self._driver_controller.rightBumper().whileTrue(
                 InstantCommand(
                     lambda: self.intake.set_desired_state(
-                        self.intake.SubsystemState.INTAKE
-                    )
-                )
-            ).onFalse(
-                InstantCommand(
-                    lambda: self.intake.set_desired_state(
-                        self.intake.SubsystemState.STOP
-                    )
-                )
-            )
-
-            self._driver_controller.rightBumper().whileTrue(
-                InstantCommand(
-                    lambda: self.intake.set_desired_state(
                         self.intake.SubsystemState.OUTPUT
                     )
                 )
@@ -452,6 +438,7 @@ class RobotContainer:
                     )
                 )
             )
+
         else:
             print(
                 "Intake subsystem not available on this robot, unable to "
