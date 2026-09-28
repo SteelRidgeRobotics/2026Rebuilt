@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from wpimath.geometry import Pose2d
 from wpimath.kinematics import ChassisSpeeds
 
+from constants import Constants
+
 # Trajectory ToF: convert LUT RPS and hood to v0 (m/s) and launch angle (rad).
 # Tune from one known shot (e.g. 30 RPS -> ~12 m/s => 0.4 m/s per RPS).
 EXIT_VELOCITY_MPS_PER_RPS = 0.4
@@ -83,6 +85,8 @@ class ShooterAimingTable:
         distance = [1.629, 1.744, 1.996, 2.504, 2.55, 3.011, 3.502, 4.293, 5.043, 5.879, 8, 10]
         hood_rotations = [0, 0.0205, 0, 0.021, 0.02, 0.03, 0.03, 0.039, 0.041, 0.045, 0.054, 0.054]  # from zero (hood down = 0)
         flywheel_rps = [25,27,28,29,30,30,32,41,46,54,80,90]
+        for i in range(len(flywheel_rps)):
+            flywheel_rps[i] += Constants.LauncherConstants.LAUNCH_OFFSET
         # ToF = time from ball exit to impact (s); seed with dist/12 m/s
         tof_sec = [d / 12.0 for d in distance]
         self._rpm_dist = list(distance)

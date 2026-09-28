@@ -97,6 +97,7 @@ class Constants:
         FEED_FORWARD = None
         MAX_RPS = None
         SETPOINT_TOLERANCE = 3
+        LAUNCH_OFFSET = 0.0
 
     class FeederConstants:
         GEAR_RATIO = None
@@ -139,10 +140,10 @@ class Constants:
         angular_std_dev_baseline = 0.06  # Radians
 
     class AutoAlignConstants:
-        HEADING_KP = 9
+        HEADING_KP = 5.5
         HEADING_KI = 0.0
-        HEADING_KD = .1
-        HEADING_TOLERANCE_RADIANS = math.radians(3.0)
+        HEADING_KD = .2
+        HEADING_TOLERANCE_RADIANS = math.radians(0.1)
         
     class HoodConstants:
         GEAR_RATIO = 15.5555 # old 68 / 3
