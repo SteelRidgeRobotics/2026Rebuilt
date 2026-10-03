@@ -36,7 +36,6 @@ class Constants:
 
     # Turret center is this many meters behind robot center (negative =
     # behind in robot +X forward)
-    TURRET_OFFSET: Final[meters] = -0.1524  # 6"
     """
     Limelight: (meters)
     0.2794 = 11" height
@@ -51,7 +50,6 @@ class Constants:
         # All motors are Kraken X60 unless otherwise specified
         INTAKE_TALON = 10
         CLIMB_TALON = 11
-        TURRET_TALON = 12
         FEEDER_TALON = 13
         HOOD_TALON = 14  # Kraken X44
         LAUNCHER_TOP_TALON = 15  # Kraken X44
@@ -99,6 +97,7 @@ class Constants:
         FEED_FORWARD = None
         MAX_RPS = None
         SETPOINT_TOLERANCE = 3
+        LAUNCH_OFFSET = 0.0
 
     class FeederConstants:
         GEAR_RATIO = None
@@ -140,47 +139,12 @@ class Constants:
         linear_std_dev_baseline = 0.02  # Meters
         angular_std_dev_baseline = 0.06  # Radians
 
-    class TurretConstants:
-        GAINS_TRAVEL = (Slot0Configs()
-                 .with_k_p(4.5)
-                 .with_k_i(0.0)
-                 .with_k_d(1.0)
-                 .with_k_s(0.5)
-                 .with_k_v(0.0)
-                 .with_k_a(0.0)
-                 )
-
-        GAINS_PRECISION= (Slot1Configs() # Slot 1: Slower but stronger (with kI)
-                 .with_k_p(25.5)
-                 .with_k_i(0.3)
-                 .with_k_d(0.0)
-                 .with_k_s(0.5)
-                 .with_k_v(0.0)
-                 .with_k_a(0.0)
-                 )
-
-        PRECISION_THRESHOLD = 0.07 # Switch to Slot 1 when within this many rotations
-
-        STATOR_LIMIT = 40.0 # Limit current to 40A to protect the hard stop
-        GEAR_RATIO = 25 / 6
-        SUPPLY_CURRENT = 40
-        MOI = 0.093001732
-        MAX_ROTATIONS = 0.099854
-        MIN_ROTATIONS = -0.861328
-        SETPOINT_TOLERANCE = 0.167
-        MM_VELOCITY = 1
-        MM_ACCELERATION = 20
-        # Only switch to other side of center when goal is at least this
-        # many degrees past middle
-        CROSS_MIDDLE_HYSTERESIS_DEGREES = 2.0
-        HEADING_TOLERANCE_RADIANS = math.radians(3.0)
-
     class AutoAlignConstants:
-        HEADING_KP = 9
+        HEADING_KP = 5.5
         HEADING_KI = 0.0
-        HEADING_KD = .1
-        HEADING_TOLERANCE_RADIANS = math.radians(3.0)
-
+        HEADING_KD = .2
+        HEADING_TOLERANCE_RADIANS = math.radians(0.1)
+        
     class HoodConstants:
         GEAR_RATIO = 15.5555 # old 68 / 3
         GAINS = (Slot0Configs()

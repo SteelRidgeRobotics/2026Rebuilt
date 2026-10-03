@@ -37,7 +37,7 @@ A large `match Constants.CURRENT_MODE` block chooses IO implementations:
 
 ## Component poses
 
-`get_component_poses()` returns **`Pose3d`** list for turret, hood, and climber for AdvantageScope-style **3D logging**.
+`get_component_poses()` returns **`Pose3d`** list for hood and climber for AdvantageScope-style **3D logging**.
 
 ## See also
 

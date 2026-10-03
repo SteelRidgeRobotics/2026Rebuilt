@@ -24,7 +24,7 @@ class FeederSubsystem(StateSubsystem):
 
     _state_configs: dict[SubsystemState, float] = {
         SubsystemState.STOP: 0.0,
-        SubsystemState.INWARD: 50.0, # TODO:was 30 for week 1, and we need to test if this fixes stuck fuel
+        SubsystemState.INWARD: 80.0, # TODO:was 30 for week 1, and we need to test if this fixes stuck fuel
     }
 
     def __init__(self, io: FeederIO) -> None:

@@ -108,26 +108,6 @@ def hub_status(winner_active, game_message, is_blue):
     else:
         return "Inactive"
 
-def make_turret_pose_supplier(
-    robot_pose_supplier: Callable[[], Pose2d],
-) -> Callable[[], Pose2d]:
-    """
-    Returns a pose supplier that gives the turret center in field frame.
-    Use this for hood/launcher/turret distance and aiming so calculations
-    use the turret position (robot center + TURRET_OFFSET behind) instead of robot center.
-    """
-    # Offset in robot frame: turret is TURRET_OFFSET m behind center (robot +X = forward)
-    offset_robot = Translation2d(Constants.TURRET_OFFSET, 0.0)
-
-    def get_turret_pose() -> Pose2d:
-        robot = robot_pose_supplier()
-        offset_field = offset_robot.rotateBy(robot.rotation())
-        t = robot.translation()
-        turret_translation = Translation2d(t.X() + offset_field.X(), t.Y() + offset_field.Y())
-        return Pose2d(turret_translation, robot.rotation())
-
-    return get_turret_pose
-
 def try_until_ok(max_attempts: int, command: Callable[[], StatusCode]) -> None:
     """Attempts to run the command until no error is produced."""
     for _ in range(max_attempts):

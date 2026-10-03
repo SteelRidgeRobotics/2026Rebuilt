@@ -104,15 +104,3 @@ class HoodSubsystem(StateSubsystem):
     def get_current_state(self) -> SubsystemState | None:
         """get state"""
         return super().get_current_state()
-
-    def get_component_pose(self, turret: Pose3d) -> Pose3d:
-        """
-        Gets the articulated component pose for AdvantageScope.
-        :param turret: Component pose of the turret
-        """
-        return Pose3d(
-            -0.032810,
-            0,
-            0.465032,
-            Rotation3d(0, rotationsToRadians(self.inputs.hood_position), 0)
-        ).rotateAround(turret.translation(), turret.rotation())
