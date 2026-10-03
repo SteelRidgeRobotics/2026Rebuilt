@@ -86,7 +86,10 @@ class ShooterAimingTable:
         hood_rotations = [0, 0.0205, 0, 0.021, 0.02, 0.03, 0.03, 0.039, 0.041, 0.045, 0.054, 0.054]  # from zero (hood down = 0)
         flywheel_rps = [25,27,28,29,30,30,32,41,46,54,80,90]
         for i in range(len(flywheel_rps)):
-            flywheel_rps[i] += Constants.LauncherConstants.LAUNCH_OFFSET
+            #flywheel_rps[i] += Constants.LauncherConstants.LAUNCH_OFFSET
+            flywheel_rps[i] *= Constants.LauncherConstants.LAUNCH_OFFSET
+            if flywheel_rps[i] >= 90:
+                flywheel_rps[i] = 90
         # ToF = time from ball exit to impact (s); seed with dist/12 m/s
         tof_sec = [d / 12.0 for d in distance]
         self._rpm_dist = list(distance)

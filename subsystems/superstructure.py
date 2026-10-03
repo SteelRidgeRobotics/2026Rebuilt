@@ -323,7 +323,7 @@ class Superstructure(Subsystem):
         current = self._drivetrain.get_cached_state().pose.rotation()
         target = self.get_target_pose(self._drivetrain.get_cached_state().pose)
         error_rad = abs((target - current).radians())
-        Logger.recordOutput("swerve/TargetHeading", target())
+        Logger.recordOutput("swerve/TargetHeading", target)
         Logger.recordOutput("Superstructure/HeadingErrorRad", error_rad)
         return error_rad <= Constants.AutoAlignConstants.HEADING_TOLERANCE_RADIANS
     
