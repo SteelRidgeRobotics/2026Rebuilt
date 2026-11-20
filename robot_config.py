@@ -15,6 +15,7 @@ from pykit.logger import Logger
 class Robot(Enum):
     """Enumeration of available robots."""
     LARRY = auto()  # Test robot
+    MELODY = auto()  # Test robot2
     COMP = auto()   # Competition robot
     UNKNOWN = auto()  # Fallback if detection fails
 
@@ -49,6 +50,10 @@ def detect_robot() -> Robot:
             "00:08:f2:33:f9:d1",  # Replace with Larry's actual MAC
             # Add other possible MAC addresses for Larry if it has multiple interfaces
         ]
+        MELODY_MAC_ADDRESSES = [
+            "00:08:f2:43:83:12",  # Replace with Melody's actual MAC
+            # Add other possible MAC addresses for Melody if it has multiple interfaces
+        ]
         COMP_MAC_ADDRESSES = [
             "00:08:f2:83:d8:07",  # Replace with Comp's actual MAC
             # Add other possible MAC addresses for Comp if it has multiple interfaces
@@ -57,9 +62,15 @@ def detect_robot() -> Robot:
         if mac_address in LARRY_MAC_ADDRESSES:
             print("Mac address is for Larry")
             return Robot.LARRY
-        if mac_address in COMP_MAC_ADDRESSES:
+        elif mac_address in MELODY_MAC_ADDRESSES:
+            print("Mac address is for Melody")
+            return Robot.MELODY
+        elif mac_address in COMP_MAC_ADDRESSES:
             print("Mac address is for Dwayne.")
             return Robot.COMP
+        else:
+            print(f"Mac address {mac_address} is for unknown robot")
+
     except Exception:
         pass
 
@@ -68,6 +79,8 @@ def detect_robot() -> Robot:
         hostname = socket.gethostname().lower()
         if "larry" in hostname:
             return Robot.LARRY
+        if "melody" in hostname:
+            return Robot.MELODY
         if "comp" in hostname or "competition" in hostname:
             return Robot.COMP
     except Exception:
@@ -78,6 +91,8 @@ def detect_robot() -> Robot:
     robot_name = os.environ.get("ROBOT_NAME", "").upper()
     if robot_name == "LARRY":
         return Robot.LARRY
+    if robot_name == "MELODY":
+        return Robot.MELODY
     if robot_name == "COMP":
         return Robot.COMP
 
@@ -109,6 +124,15 @@ def has_subsystem(subsystem_name: str) -> bool:
         # "intake",
     }
 
+    MELODY_SUBSYSTEMS = {
+        "drivetrain",  # Always present
+        "vision",      # Always present
+        #"hood",
+        #"turret",
+        # "climber",
+        # "intake",
+    }
+
     COMP_SUBSYSTEMS = {
         "drivetrain",  # Always present
         "vision",      # Always present
@@ -120,9 +144,9 @@ def has_subsystem(subsystem_name: str) -> bool:
         #"climber",     # Competition robot has climber
         # Add other Comp subsystems as needed
     }
-    
 
     if currentRobot == Robot.COMP:
         return subsystem_name.lower() in COMP_SUBSYSTEMS
-    else:  # LARRY or UNKNOWN defaults to LARRY
-        return subsystem_name.lower() in LARRY_SUBSYSTEMS
+    if currentRobot == Robot.MELODY:
+        return subsystem_name.lower() in MELODY_SUBSYSTEMS
+    return subsystem_name.lower() in LARRY_SUBSYSTEMS

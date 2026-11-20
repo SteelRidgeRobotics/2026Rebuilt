@@ -210,6 +210,23 @@ def _init_hardware_configs():
             # as needed
             Constants.ClimberConstants.SUPPLY_CURRENT = 30.0
             Constants.ClimberConstants.MOMENT_OF_INERTIA = 0.3
+        case Robot.MELODY:
+            # Climber
+            Constants.ClimberConstants.GEAR_RATIO = 61504.0 / 189
+            Constants.ClimberConstants.GAINS = (Slot0Configs()
+                                                .with_k_p(40.0)
+                                                .with_k_i(0.0)
+                                                .with_k_d(0.0)
+                                                .with_k_s(0.0)
+                                                .with_k_v(0.0)
+                                                .with_k_a(0.0)
+                                                )
+            Constants.ClimberConstants.VOLTAGE_INWARDS = 16.0
+            Constants.ClimberConstants.VOLTAGE_OUTWARDS = -4.0
+            Constants.ClimberConstants.CLIMB_FULL_THRESHOLD = 5.0  # Adjust
+            # as needed
+            Constants.ClimberConstants.SUPPLY_CURRENT = 30.0
+            Constants.ClimberConstants.MOMENT_OF_INERTIA = 0.3
         case _:  # COMP or UNKNOWN defaults to COMP
             # Climber
             Constants.ClimberConstants.GEAR_RATIO = 61504.0 / 189  # Same or
