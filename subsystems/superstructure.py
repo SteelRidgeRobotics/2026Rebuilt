@@ -195,21 +195,23 @@ class Superstructure(Subsystem):
 
         match self._goal_state:
             case self.Goal.DEFAULT:
-                if self.feeder.is_locked:
+                if self.feeder is not None and self.feeder.is_locked:
                     self.feeder.unlock()
                     self.feeder.set_desired_state(
                         FeederSubsystem.SubsystemState.STOP
                     )
 
             case self.Goal.INTAKE:
-                if self.feeder.is_locked:
+                if self.feeder is not None and self.feeder.is_locked:
                     self.feeder.unlock()
                     self.feeder.set_desired_state(
                         FeederSubsystem.SubsystemState.INWARD
                     )
 
             case self.Goal.LAUNCH:
-                if (
+                if self.feeder is None:
+                    pass
+                elif (
                         (
                                 self._hood_check
                                 and self._flywheel_check
@@ -339,16 +341,16 @@ class Superstructure(Subsystem):
             (None, None, None, None, False)
         )
 
-        if not intake_state is None:
+        if intake_state is not None and self.intake is not None:
             self.intake.set_desired_state(intake_state)
 
-        if not feeder_state is None:
+        if feeder_state is not None and self.feeder is not None:
             self.feeder.set_desired_state(feeder_state)
 
-        if not launcher_state is None:
+        if launcher_state is not None and self.launcher is not None:
             self.launcher.set_desired_state(launcher_state)
-        
-        if not hood_state is None:
+
+        if hood_state is not None and self.hood is not None:
             self.hood.set_desired_state(hood_state)
 
         if superstructure_state:

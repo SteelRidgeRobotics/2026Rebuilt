@@ -34,6 +34,8 @@ from subsystems import superstructure
 
 if currentRobot == Robot.LARRY:
     from generated.larry.tuner_constants import TunerSwerveDrivetrain
+elif currentRobot == Robot.MELODY:
+    from generated.melody.tuner_constants import TunerSwerveDrivetrain
 else:
     from generated.tuner_constants import TunerSwerveDrivetrain
 

@@ -23,6 +23,8 @@ from wpimath.units import rotationsToRadians, inchesToMeters
 from constants import Constants
 from generated.larry.tuner_constants import (TunerConstants as
                                              LarryTunerConstants)
+from generated.melody.tuner_constants import (TunerConstants as
+                                             MelodyTunerConstants)
 from generated.tuner_constants import TunerConstants
 from lib.fuel_sim import FuelSim
 from robot_config import currentRobot, has_subsystem, Robot
@@ -56,6 +58,8 @@ class RobotContainer:
 
         if currentRobot == Robot.LARRY:
             self._max_speed = LarryTunerConstants.speed_at_12_volts
+        elif currentRobot == Robot.MELODY:
+            self._max_speed = MelodyTunerConstants.speed_at_12_volts
 
         self._driver_controller = commands2.button.CommandXboxController(0)
 
@@ -78,6 +82,8 @@ class RobotContainer:
                 if currentRobot == Robot.LARRY:
                     self.drivetrain = (
                         LarryTunerConstants.create_drivetrain())
+                elif currentRobot == Robot.MELODY:
+                    self.drivetrain = MelodyTunerConstants.create_drivetrain()
                 else:
                     self.drivetrain = TunerConstants.create_drivetrain()
 
@@ -122,10 +128,10 @@ class RobotContainer:
 
                     # Create climber real hardware IO
                     # Note: Constants.CanIDs.CLIMB_TALON is automatically
-                    # set based on detected robot (Larry vs Comp)
+                    # set based on detected robot (Larry vs Melody vs Comp)
                     climber_io = ClimberIOTalonFX(
                         Constants.CanIDs.CLIMB_TALON,
-                        # Different CAN ID for Larry vs Comp
+                        # Different CAN ID for Larry vs Melody vs Comp
                         climber_motor_config
                     )
 
@@ -258,10 +264,16 @@ class RobotContainer:
             "Default",
             self.superstructure.set_goal_command(Superstructure.Goal.DEFAULT)
         )
-        NamedCommands.registerCommand(
-            "Launch",
-            self.superstructure.set_goal_command(Superstructure.Goal.LAUNCH).alongWith(self.intake.set_desired_state_command(self.intake.SubsystemState.INTAKE))
+        launch_command = self.superstructure.set_goal_command(
+            Superstructure.Goal.LAUNCH
         )
+        if self.intake is not None:
+            launch_command = launch_command.alongWith(
+                self.intake.set_desired_state_command(
+                    self.intake.SubsystemState.INTAKE
+                )
+            )
+        NamedCommands.registerCommand("Launch", launch_command)
         NamedCommands.registerCommand(
             "Aim to Depot",
             self.superstructure.set_goal_command(Superstructure.Goal.AIMDEPOT)
@@ -474,21 +486,22 @@ class RobotContainer:
                     Superstructure.Goal.STOPLAUNCH
                 )
             )
-            Trigger(
-                lambda: self._driver_controller.getLeftTriggerAxis() > 0.75
-            ).whileTrue(
-                InstantCommand(
-                    lambda: self.intake.set_desired_state(
-                        self.intake.SubsystemState.INTAKE
+            if self.intake is not None:
+                Trigger(
+                    lambda: self._driver_controller.getLeftTriggerAxis() > 0.75
+                ).whileTrue(
+                    InstantCommand(
+                        lambda: self.intake.set_desired_state(
+                            self.intake.SubsystemState.INTAKE
+                        )
+                    )
+                ).onFalse(
+                    InstantCommand(
+                        lambda: self.intake.set_desired_state(
+                            self.intake.SubsystemState.STOP
+                        )
                     )
                 )
-            ).onFalse(
-                InstantCommand(
-                    lambda: self.intake.set_desired_state(
-                        self.intake.SubsystemState.STOP
-                    )
-                )
-            )
 
         else:
             print(
